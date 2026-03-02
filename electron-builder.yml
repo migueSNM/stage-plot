@@ -41,11 +41,13 @@ mac:
   target:
     - target: dmg
       arch:
-        - x64
         - arm64
+    - target: dmg
+      arch:
+        - x64
 
 dmg:
-  artifactName: ${name}-${version}.${ext}
+  artifactName: ${name}-${version}-${arch}.${ext}
 
 linux:
   target:
