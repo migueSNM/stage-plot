@@ -20,6 +20,8 @@ export type StageItemType =
   | 'speaker_main'
   | 'person'
   | 'generic'
+  | 'rectangle'
+  | 'circle'
 
 export interface StageItem {
   id: string

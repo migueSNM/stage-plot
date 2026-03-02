@@ -10,6 +10,7 @@ function invoke<K extends keyof IpcChannels>(
 }
 
 const api = {
+  platform: process.platform as NodeJS.Platform,
   projects: {
     list: () => invoke('db:projects:list'),
     get: (id: string) => invoke('db:projects:get', id),

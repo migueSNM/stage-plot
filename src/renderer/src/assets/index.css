@@ -3,7 +3,9 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
+  /* Dark theme (default) */
+  :root,
+  [data-theme='dark'] {
     --color-bg: #1a1a2e;
     --color-surface: #16213e;
     --color-surface-2: #0f3460;
@@ -11,6 +13,17 @@
     --color-text: #eaeaea;
     --color-text-muted: #8a8a9a;
     --color-border: #2a2a4a;
+  }
+
+  /* Light theme */
+  [data-theme='light'] {
+    --color-bg: #f0f2fa;
+    --color-surface: #ffffff;
+    --color-surface-2: #e4e8f5;
+    --color-accent: #c4304a;
+    --color-text: #1a1a2e;
+    --color-text-muted: #6b6b8a;
+    --color-border: #d0d4e8;
   }
 
   * {
