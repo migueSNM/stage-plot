@@ -240,29 +240,32 @@ git push
 
 ### Creating a release (triggers macOS + Windows builds automatically)
 
+Do these steps **in order** every time you want to publish a new version:
+
 ```bash
-# 1. Make sure everything is committed and pushed
-git status
+# 1. Make sure all your changes are committed and pushed
+git status          # should be clean
 git push
 
-# 2. Create a version tag (use semantic versioning: major.minor.patch)
+# 2. Bump the version number in package.json  ← must come BEFORE the tag
+#    Edit "version" manually, e.g. "0.1.0" → "0.2.0"
+#    Use semantic versioning: major.minor.patch
+
+# 3. Commit the version bump
+git add package.json
+git commit -m "chore: bump version to 0.2.0"
+git push
+
+# 4. Create a tag that matches the version (must start with "v")
 git tag v0.2.0
 
-# 3. Push the tag — this triggers the GitHub Actions build workflow
-git push --tags
+# 5. Push the tag — this is what triggers the GitHub Actions build
+git push origin v0.2.0
 ```
 
 After ~10 minutes, go to your repo on GitHub → **Actions** tab to download the built installers as artifacts.
 
-### Bumping the version number
-
-Edit `"version"` in [package.json](package.json) before tagging:
-
-```json
-{
-  "version": "0.2.0"
-}
-```
+> **Order matters:** the version in `package.json` must be updated and committed _before_ you create the tag, so the version number is baked into the packaged app correctly.
 
 ### Useful git commands
 
