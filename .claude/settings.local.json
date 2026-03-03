@@ -2,7 +2,18 @@
   "permissions": {
     "allow": [
       "Bash(npm create @quick-start/electron@latest . -- --template react-ts)",
-      "Bash(npm install)"
+      "Bash(npm install)",
+      "Bash(npm install --save-dev @electron/rebuild)",
+      "Bash(npm install --save-dev @electron/rebuild@3.6.0)",
+      "Bash(npx electron-rebuild -f -w better-sqlite3)",
+      "Bash(npm install jspdf)",
+      "Bash(npm install i18next react-i18next)",
+      "Bash(git add CLAUDE.md src/)",
+      "Bash(npm run package:mac)",
+      "Bash(ls -lh /Users/miguelchirinos/projects/stage-plot/dist/*.dmg)",
+      "Bash(git remote add origin https://github.com/migueSNM/stage-plot.git)",
+      "Bash(git push -u origin main)",
+      "Bash(git remote set-url origin git@github.com:migueSNM/stage-plot.git)"
     ]
   }
 }
