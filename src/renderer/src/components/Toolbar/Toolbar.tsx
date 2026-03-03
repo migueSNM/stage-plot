@@ -5,6 +5,10 @@ import { usePrefsStore } from '../../store/usePrefsStore'
 
 const isMac = window.api.platform === 'darwin'
 
+function clamp(v: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, v))
+}
+
 export function Toolbar(): JSX.Element {
   const { t } = useTranslation()
   const { theme, language, setTheme, setLanguage } = usePrefsStore()
@@ -19,7 +23,10 @@ export function Toolbar(): JSX.Element {
     undoStack,
     redoStack,
     undo,
-    redo
+    redo,
+    canvasScale,
+    setCanvasScale,
+    setCanvasPos
   } = useProjectStore()
 
   const [showProjects, setShowProjects] = useState(false)
@@ -117,6 +124,42 @@ export function Toolbar(): JSX.Element {
 
               <div className="w-px h-5 bg-border mx-1" />
 
+              {/* Zoom controls */}
+              <div className="flex items-center gap-0.5">
+                <button
+                  onClick={() => setCanvasScale(clamp(canvasScale / 1.15, 0.2, 4))}
+                  title={t('toolbar.zoomOut')}
+                  className="text-sm w-7 h-7 flex items-center justify-center rounded
+                             hover:bg-surface-2 transition-colors cursor-pointer"
+                >
+                  −
+                </button>
+                <span className="w-12 text-center text-xs text-muted tabular-nums">
+                  {Math.round(canvasScale * 100)}%
+                </span>
+                <button
+                  onClick={() => setCanvasScale(clamp(canvasScale * 1.15, 0.2, 4))}
+                  title={t('toolbar.zoomIn')}
+                  className="text-sm w-7 h-7 flex items-center justify-center rounded
+                             hover:bg-surface-2 transition-colors cursor-pointer"
+                >
+                  +
+                </button>
+                <button
+                  onClick={() => {
+                    setCanvasScale(1)
+                    setCanvasPos({ x: 0, y: 0 })
+                  }}
+                  title={t('toolbar.resetZoom')}
+                  className="text-xs w-7 h-7 flex items-center justify-center rounded
+                             hover:bg-surface-2 transition-colors cursor-pointer text-muted"
+                >
+                  ↺
+                </button>
+              </div>
+
+              <div className="w-px h-5 bg-border mx-1" />
+
               {/* Export */}
               <div ref={exportMenuRef} className="relative">
                 <button
@@ -132,14 +175,20 @@ export function Toolbar(): JSX.Element {
                     <button
                       className="w-full text-left px-4 py-2 text-xs hover:bg-surface-2
                                  transition-colors flex items-center gap-2"
-                      onClick={() => { exportFns.png?.(); setShowExport(false) }}
+                      onClick={() => {
+                        exportFns.png?.()
+                        setShowExport(false)
+                      }}
                     >
                       🖼 {t('toolbar.exportPng')}
                     </button>
                     <button
                       className="w-full text-left px-4 py-2 text-xs hover:bg-surface-2
                                  transition-colors flex items-center gap-2"
-                      onClick={() => { exportFns.pdf?.(); setShowExport(false) }}
+                      onClick={() => {
+                        exportFns.pdf?.()
+                        setShowExport(false)
+                      }}
                     >
                       📄 {t('toolbar.exportPdf')}
                     </button>
@@ -220,7 +269,10 @@ export function Toolbar(): JSX.Element {
               {projects.map((p) => (
                 <button
                   key={p.id}
-                  onClick={async () => { await openProject(p.id); setShowProjects(false) }}
+                  onClick={async () => {
+                    await openProject(p.id)
+                    setShowProjects(false)
+                  }}
                   className="text-left px-3 py-2 rounded hover:bg-surface-2 text-sm
                              transition-colors cursor-pointer"
                 >

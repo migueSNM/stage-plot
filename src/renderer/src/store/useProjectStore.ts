@@ -3,6 +3,14 @@ import type { Project, StageItem } from '../../../shared/types'
 
 const MAX_HISTORY = 50
 
+const CABLE_TYPES = new Set([
+  'cable_xlr',
+  'cable_trs',
+  'cable_ts',
+  'cable_midi',
+  'cable_speakon'
+])
+
 interface ExportFns {
   png: (() => void) | null
   pdf: (() => void) | null
@@ -16,6 +24,11 @@ interface ProjectStore {
   undoStack: StageItem[][]
   redoStack: StageItem[][]
   exportFns: ExportFns
+
+  // Canvas view state
+  canvasScale: number
+  canvasPos: { x: number; y: number }
+  clipboard: StageItem[]
 
   registerExport: (fns: ExportFns) => void
 
@@ -32,12 +45,22 @@ interface ProjectStore {
   deleteProject: (id: string) => Promise<void>
   closeProject: () => void
 
+  // Canvas view actions
+  setCanvasScale: (scale: number) => void
+  setCanvasPos: (pos: { x: number; y: number }) => void
+
+  // Clipboard actions
+  copySelected: (ids: string[]) => void
+  pasteClipboard: () => Promise<string[]>
+
   // Item actions
   addItem: (item: StageItem) => Promise<void>
   updateItem: (item: StageItem) => Promise<void>
   updateItemPosition: (id: string, x: number, y: number) => Promise<void>
   nudgeItem: (id: string, dx: number, dy: number) => Promise<void>
+  nudgeItems: (ids: string[], dx: number, dy: number) => Promise<void>
   deleteItem: (id: string) => Promise<void>
+  deleteItems: (ids: string[]) => Promise<void>
   setItems: (items: StageItem[]) => void
 }
 
@@ -57,8 +80,54 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   undoStack: [],
   redoStack: [],
   exportFns: { png: null, pdf: null },
+  canvasScale: 1.0,
+  canvasPos: { x: 0, y: 0 },
+  clipboard: [],
 
   registerExport: (fns) => set({ exportFns: fns }),
+
+  // ── Canvas view ────────────────────────────────────────────────────────────
+
+  setCanvasScale: (scale) => set({ canvasScale: scale }),
+  setCanvasPos: (pos) => set({ canvasPos: pos }),
+
+  // ── Clipboard ─────────────────────────────────────────────────────────────
+
+  copySelected: (ids) => {
+    const { items } = get()
+    const selected = items.filter((i) => ids.includes(i.id))
+    set({ clipboard: selected.map((i) => ({ ...i })) })
+  },
+
+  pasteClipboard: async () => {
+    const { clipboard, activeProject } = get()
+    if (!clipboard.length || !activeProject) return []
+    get().pushHistory()
+    const now_ts = Date.now()
+    const newItems: StageItem[] = clipboard.map((item, idx) => {
+      const extra =
+        item.extra && CABLE_TYPES.has(item.type)
+          ? {
+              ...(item.extra as Record<string, unknown>),
+              x2: ((item.extra as Record<string, unknown>).x2 as number) + 20,
+              y2: ((item.extra as Record<string, unknown>).y2 as number) + 20,
+              fromId: null,
+              toId: null
+            }
+          : item.extra
+      return {
+        ...item,
+        id: `${now_ts + idx}-${Math.random().toString(36).slice(2, 9)}`,
+        x: item.x + 20,
+        y: item.y + 20,
+        extra,
+        sort_order: now_ts + idx
+      }
+    })
+    await window.api.items.saveMany(newItems)
+    set((s) => ({ items: [...s.items, ...newItems] }))
+    return newItems.map((i) => i.id)
+  },
 
   // ── History ────────────────────────────────────────────────────────────────
 
@@ -180,10 +249,37 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     set((s) => ({ items: s.items.map((i) => (i.id === id ? updated : i)) }))
   },
 
+  // Move multiple items by delta without pushing history
+  nudgeItems: async (ids, dx, dy) => {
+    const { items } = get()
+    const updated = items.map((i) => {
+      if (!ids.includes(i.id)) return i
+      const base = { ...i, x: i.x + dx, y: i.y + dy }
+      // For cables, also move the free endpoint coordinates
+      if (CABLE_TYPES.has(i.type) && i.extra) {
+        const ex = i.extra as { fromId: string | null; toId: string | null; x2: number; y2: number }
+        return { ...base, extra: { ...ex, x2: ex.x2 + dx, y2: ex.y2 + dy } }
+      }
+      return base
+    })
+    const toSave = updated.filter((i) => ids.includes(i.id))
+    if (toSave.length) await window.api.items.saveMany(toSave)
+    set({ items: updated })
+  },
+
   deleteItem: async (id) => {
     get().pushHistory()
     await window.api.items.delete(id)
     set((s) => ({ items: s.items.filter((i) => i.id !== id) }))
+  },
+
+  deleteItems: async (ids) => {
+    if (!ids.length) return
+    get().pushHistory()
+    for (const id of ids) {
+      await window.api.items.delete(id)
+    }
+    set((s) => ({ items: s.items.filter((i) => !ids.includes(i.id)) }))
   },
 
   setItems: (items) => set({ items })

@@ -9,7 +9,10 @@ const en = {
     undo: 'Undo',
     redo: 'Redo',
     language: 'Language',
-    theme: 'Theme'
+    theme: 'Theme',
+    zoomIn: 'Zoom In',
+    zoomOut: 'Zoom Out',
+    resetZoom: 'Reset Zoom'
   },
   projects: {
     title: 'Projects',
@@ -33,17 +36,28 @@ const en = {
     generic: 'Generic',
     shapes: 'Shapes',
     rectangle: 'Rectangle',
-    circle: 'Circle'
+    circle: 'Circle',
+    cables: 'Cables',
+    cableXlr: 'XLR',
+    cableTrs: 'TRS',
+    cableTs: 'TS',
+    cableMidi: 'MIDI',
+    cableSpeakon: 'Speakon',
+    annotations: 'Annotations',
+    text: 'Text'
   },
   canvas: {
     frontOfStage: 'FRONT OF STAGE',
-    hint: 'Delete to remove · Dbl-click or right-click to rename · [ / ] to rotate'
+    hint: 'Delete to remove · Dbl-click or right-click to rename · [ / ] to rotate',
+    hintMulti: '{{count}} items selected · Delete to remove all'
   },
   contextMenu: {
     rename: 'Rename',
     delete: 'Delete',
     rotateCW: 'Rotate 90° CW',
-    rotateCCW: 'Rotate 90° CCW'
+    rotateCCW: 'Rotate 90° CCW',
+    changeColor: 'Change Color',
+    deleteSelected: 'Delete Selected ({{count}})'
   }
 } as const
 

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useProjectStore } from '../../store/useProjectStore'
-import type { StageItemType } from '../../../../shared/types'
+import type { StageItem, StageItemType } from '../../../../shared/types'
 
 type PaletteEntry = { type: StageItemType; tKey: string; icon: string }
 
@@ -22,6 +22,18 @@ const SHAPE_ITEMS: PaletteEntry[] = [
   { type: 'circle', tKey: 'palette.circle', icon: '◯' }
 ]
 
+const CABLE_ITEMS: PaletteEntry[] = [
+  { type: 'cable_xlr', tKey: 'palette.cableXlr', icon: '〰' },
+  { type: 'cable_trs', tKey: 'palette.cableTrs', icon: '〰' },
+  { type: 'cable_ts', tKey: 'palette.cableTs', icon: '〰' },
+  { type: 'cable_midi', tKey: 'palette.cableMidi', icon: '〰' },
+  { type: 'cable_speakon', tKey: 'palette.cableSpeakon', icon: '〰' }
+]
+
+const ANNOTATION_ITEMS: PaletteEntry[] = [
+  { type: 'text', tKey: 'palette.text', icon: 'T' }
+]
+
 const DEFAULT_SIZES: Record<StageItemType, { w: number; h: number }> = {
   person: { w: 60, h: 60 },
   microphone: { w: 40, h: 40 },
@@ -33,7 +45,13 @@ const DEFAULT_SIZES: Record<StageItemType, { w: number; h: number }> = {
   speaker_main: { w: 60, h: 80 },
   generic: { w: 60, h: 60 },
   rectangle: { w: 100, h: 60 },
-  circle: { w: 70, h: 70 }
+  circle: { w: 70, h: 70 },
+  cable_xlr: { w: 100, h: 0 },
+  cable_trs: { w: 100, h: 0 },
+  cable_ts: { w: 100, h: 0 },
+  cable_midi: { w: 100, h: 0 },
+  cable_speakon: { w: 100, h: 0 },
+  text: { w: 120, h: 30 }
 }
 
 function generateId(): string {
@@ -48,10 +66,27 @@ export function ItemPalette(): JSX.Element {
   const query = search.toLowerCase()
   const filtered = PALETTE_ITEMS.filter((item) => t(item.tKey).toLowerCase().includes(query))
   const filteredShapes = SHAPE_ITEMS.filter((item) => t(item.tKey).toLowerCase().includes(query))
+  const filteredCables = CABLE_ITEMS.filter((item) => t(item.tKey).toLowerCase().includes(query))
+  const filteredAnnotations = ANNOTATION_ITEMS.filter((item) =>
+    t(item.tKey).toLowerCase().includes(query)
+  )
 
   function handleAdd(type: StageItemType, label: string): void {
     if (!activeProject) return
     const size = DEFAULT_SIZES[type]
+    const isCable =
+      type === 'cable_xlr' ||
+      type === 'cable_trs' ||
+      type === 'cable_ts' ||
+      type === 'cable_midi' ||
+      type === 'cable_speakon'
+
+    const extra: StageItem['extra'] = isCable
+      ? { fromId: null, toId: null, x2: 120 + size.w, y2: 120 }
+      : type === 'text'
+        ? { fontSize: 16, fontStyle: 'normal' }
+        : null
+
     addItem({
       id: generateId(),
       project_id: activeProject.id,
@@ -63,10 +98,47 @@ export function ItemPalette(): JSX.Element {
       width: size.w,
       height: size.h,
       color: null,
-      extra: null,
+      extra,
       sort_order: Date.now()
     })
   }
+
+  function renderSection(entries: PaletteEntry[], sectionKey: string): JSX.Element | null {
+    if (!entries.length) return null
+    return (
+      <>
+        <div className="flex items-center gap-2 px-1 pt-2 pb-1">
+          <div className="flex-1 h-px bg-border" />
+          <span className="text-[10px] font-bold uppercase tracking-widest text-muted">
+            {t(sectionKey)}
+          </span>
+          <div className="flex-1 h-px bg-border" />
+        </div>
+        {entries.map(({ type, tKey, icon }) => {
+          const label = t(tKey)
+          return (
+            <button
+              key={type}
+              disabled={!activeProject}
+              onClick={() => handleAdd(type, label)}
+              className="flex items-center gap-2.5 px-3 py-2 rounded text-sm text-left
+                         hover:bg-surface-2 active:scale-95 disabled:opacity-30
+                         disabled:cursor-not-allowed transition-all"
+            >
+              <span className="text-xl leading-none w-6 text-center">{icon}</span>
+              <span className="text-[13px]">{label}</span>
+            </button>
+          )
+        })}
+      </>
+    )
+  }
+
+  const hasNoResults =
+    filtered.length === 0 &&
+    filteredShapes.length === 0 &&
+    filteredCables.length === 0 &&
+    filteredAnnotations.length === 0
 
   return (
     <aside className="w-52 flex-shrink-0 bg-surface border-r border-border flex flex-col">
@@ -97,7 +169,7 @@ export function ItemPalette(): JSX.Element {
       </div>
 
       <div className="flex-1 overflow-y-auto p-2 flex flex-col gap-0.5">
-        {filtered.length === 0 && filteredShapes.length === 0 && (
+        {hasNoResults && (
           <p className="text-muted text-xs text-center py-6">{t('palette.noMatch')}</p>
         )}
         {filtered.map(({ type, tKey, icon }) => {
@@ -117,33 +189,9 @@ export function ItemPalette(): JSX.Element {
           )
         })}
 
-        {filteredShapes.length > 0 && (
-          <>
-            <div className="flex items-center gap-2 px-1 pt-2 pb-1">
-              <div className="flex-1 h-px bg-border" />
-              <span className="text-[10px] font-bold uppercase tracking-widest text-muted">
-                {t('palette.shapes')}
-              </span>
-              <div className="flex-1 h-px bg-border" />
-            </div>
-            {filteredShapes.map(({ type, tKey, icon }) => {
-              const label = t(tKey)
-              return (
-                <button
-                  key={type}
-                  disabled={!activeProject}
-                  onClick={() => handleAdd(type, label)}
-                  className="flex items-center gap-2.5 px-3 py-2 rounded text-sm text-left
-                             hover:bg-surface-2 active:scale-95 disabled:opacity-30
-                             disabled:cursor-not-allowed transition-all"
-                >
-                  <span className="text-xl leading-none w-6 text-center">{icon}</span>
-                  <span className="text-[13px]">{label}</span>
-                </button>
-              )
-            })}
-          </>
-        )}
+        {renderSection(filteredShapes, 'palette.shapes')}
+        {renderSection(filteredCables, 'palette.cables')}
+        {renderSection(filteredAnnotations, 'palette.annotations')}
       </div>
     </aside>
   )

@@ -53,8 +53,11 @@ stage-plot/
 │   │   │   ├── ItemPalette/
 │   │   │   │   └── ItemPalette.tsx  # Left sidebar with draggable items + search
 │   │   │   └── StageCanvas/
-│   │   │       ├── StageCanvas.tsx  # Main canvas: interactions, keyboard, context menu, export
-│   │   │       └── StageItemNode.tsx # Individual item rendering (Konva shapes)
+│   │   │       ├── StageCanvas.tsx        # Main canvas: interactions, keyboard, context menu, export
+│   │   │       ├── StageItemNode.tsx      # Individual item rendering (Konva shapes)
+│   │   │       ├── CableNode.tsx          # Cable rendering + orthogonal routing algorithm
+│   │   │       ├── TextNode.tsx           # Text annotation rendering
+│   │   │       └── ColorPickerPopover.tsx # Per-item color picker popover
 │   │   │
 │   │   ├── i18n/
 │   │   │   ├── en.ts               # English strings
@@ -139,9 +142,32 @@ The renderer never accesses the filesystem directly. It calls `window.api.projec
 
 ---
 
+### Work with cables
+
+Cables are a special item type (`cable_xlr`, `cable_trs`, `cable_ts`, `cable_midi`, `cable_speakon`). They render as colored orthogonal lines and can be snapped to the ports on any other item.
+
+**Adding a cable:** drag it from the palette. It starts as a free-floating line with both endpoints unconnected.
+
+**Connecting endpoints:** select the cable, then drag one of the two circular handles to any item. When you get within ~40 px of a port (top / right / bottom / left centre), a blue ring snaps the endpoint. Release to commit the connection. The cable will re-route automatically when the connected item moves.
+
+**Routing logic** (`CableNode.tsx` → `getRoutedPoints`)
+
+All cables use strictly orthogonal (90°) routing with a short stub that exits perpendicular to the connected port face before any turn. The routing strategy:
+
+- **0 turns** — endpoints already aligned on the same axis.
+- **1 turn (L-shape)** — normal case; one horizontal leg + one vertical leg.
+- **2 turns** — backtracking along one axis (e.g. left port → bottom port). The stub on the exit side provides a safe X-coordinate to pivot on, avoiding overlap with either item.
+- **3 turns** — backtracking on both axes (e.g. left port → right port). Both stub endpoints may sit at item-centre coordinates so neither is a safe corner. The cable routes below (or around) both items using a `safeY = max(p1.y, p2.y) + 60px` bypass row.
+
+The core rule: a stub coordinate is "safe" only along the axis it travels (horizontal stub → safe X, vertical stub → safe Y). Before using a stub coordinate as a routing corner, the algorithm checks whether it lies outside the connected item's boundary.
+
+**Body drag:** dragging the cable line itself disconnects both endpoints and moves the whole cable freely.
+
+---
+
 ### Add a keyboard shortcut
 
-- **Canvas shortcuts** (rotate, delete, nudge) — `onKeyDown` in [StageCanvas.tsx](src/renderer/src/components/StageCanvas/StageCanvas.tsx)
+- **Canvas shortcuts** (rotate, delete, nudge, zoom, pan) — `onKeyDown` in [StageCanvas.tsx](src/renderer/src/components/StageCanvas/StageCanvas.tsx)
 - **Global shortcuts** (undo/redo) — [App.tsx](src/renderer/src/App.tsx)
 
 ---
@@ -297,11 +323,21 @@ git reset --soft HEAD~1
 |----------|--------|
 | `Cmd/Ctrl + Z` | Undo |
 | `Cmd/Ctrl + Shift + Z` | Redo |
-| `Delete` / `Backspace` | Delete selected item |
-| `Escape` | Deselect |
-| `[` / `]` | Rotate ±15° |
-| `Shift + [` / `Shift + ]` | Rotate ±45° |
-| Arrow keys | Nudge item 1px |
-| `Shift + Arrow` | Nudge item 10px |
-| Double-click item | Rename |
+| `Cmd/Ctrl + C` | Copy selected items |
+| `Cmd/Ctrl + V` | Paste (offset +20 px) |
+| `Delete` / `Backspace` | Delete selected item(s) |
+| `Escape` | Deselect / close menu |
+| `[` / `]` | Rotate ±15° (single selection) |
+| `Shift + [` / `Shift + ]` | Rotate ±45° (single selection) |
+| Arrow keys | Nudge item(s) 1px |
+| `Shift + Arrow` | Nudge item(s) 10px |
+| `Cmd/Ctrl + =` / `+` | Zoom in |
+| `Cmd/Ctrl + -` | Zoom out |
+| `Cmd/Ctrl + 0` | Reset zoom & position |
+| `Space + drag` | Pan canvas (on empty background) |
+| Middle mouse drag | Pan canvas (anywhere) |
+| Mouse wheel | Zoom toward cursor |
+| `Shift + click` | Add / remove item from selection |
+| Drag on empty canvas | Marquee (rubber-band) selection |
+| Double-click item | Rename / edit text |
 | Right-click item | Context menu |

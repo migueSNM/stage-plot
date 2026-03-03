@@ -22,6 +22,12 @@ export type StageItemType =
   | 'generic'
   | 'rectangle'
   | 'circle'
+  | 'cable_xlr'
+  | 'cable_trs'
+  | 'cable_ts'
+  | 'cable_midi'
+  | 'cable_speakon'
+  | 'text'
 
 export interface StageItem {
   id: string

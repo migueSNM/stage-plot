@@ -4,7 +4,7 @@ import type { StageItem, StageItemType } from '../../../../shared/types'
 
 export const LABEL_HEIGHT = 22
 
-const ITEM_COLORS: Record<StageItemType, string> = {
+export const ITEM_COLORS: Record<StageItemType, string> = {
   microphone: '#e94560',
   monitor: '#f5a623',
   amp: '#7ed321',
@@ -15,7 +15,13 @@ const ITEM_COLORS: Record<StageItemType, string> = {
   person: '#3498db',
   generic: '#95a5a6',
   rectangle: '#8a9ec0',
-  circle: '#a08ac0'
+  circle: '#a08ac0',
+  cable_xlr: '#4a90e2',
+  cable_trs: '#7ed321',
+  cable_ts: '#f5a623',
+  cable_midi: '#9b59b6',
+  cable_speakon: '#f1c40f',
+  text: '#ffffff'
 }
 
 export const ITEM_ICONS: Record<StageItemType, string> = {
@@ -29,7 +35,13 @@ export const ITEM_ICONS: Record<StageItemType, string> = {
   person: '🎤',
   generic: '⬜',
   rectangle: '',
-  circle: ''
+  circle: '',
+  cable_xlr: '〰',
+  cable_trs: '〰',
+  cable_ts: '〰',
+  cable_midi: '〰',
+  cable_speakon: '〰',
+  text: ''
 }
 
 interface StageItemNodeProps {
@@ -38,7 +50,9 @@ interface StageItemNodeProps {
   labelColor: string
   selectedLabelColor: string
   nodeRef: (node: Konva.Group | null) => void
-  onSelect: () => void
+  onSelect: (e: Konva.KonvaEventObject<MouseEvent>) => void
+  onDragStart: (e: Konva.KonvaEventObject<MouseEvent>) => void
+  onDragMove: (e: Konva.KonvaEventObject<DragEvent>) => void
   onDragEnd: (e: Konva.KonvaEventObject<DragEvent>) => void
   onContextMenu: (x: number, y: number) => void
   onDblClick: () => void
@@ -51,6 +65,8 @@ export function StageItemNode({
   selectedLabelColor,
   nodeRef,
   onSelect,
+  onDragStart,
+  onDragMove,
   onDragEnd,
   onContextMenu,
   onDblClick
@@ -77,7 +93,8 @@ export function StageItemNode({
       onDblClick={onDblClick}
       onContextMenu={handleContextMenu}
       onDragEnd={onDragEnd}
-      onDragStart={onSelect}
+      onDragMove={onDragMove}
+      onDragStart={onDragStart}
     >
       {isCircular ? (
         <Circle
@@ -90,23 +107,27 @@ export function StageItemNode({
           shadowColor={isSelected ? '#ffffff' : color}
           shadowOpacity={isSelected ? 0.5 : 0.35}
           stroke={isSelected ? '#ffffff' : color}
-          strokeWidth={isShape ? (isSelected ? 3 : 2.5) : (isSelected ? 2.5 : 0)}
-          hitFunc={isShape ? (ctx, shape) => {
-            const r = Math.min(width, height) / 2
-            const cx = width / 2
-            const cy = height / 2
-            const hw = 8
-            const innerR = Math.max(0, r - hw)
-            ctx.beginPath()
-            ctx.arc(cx, cy, r + hw, 0, Math.PI * 2, false)
-            ctx.closePath()
-            if (innerR > 0) {
-              ctx.moveTo(cx + innerR, cy)
-              ctx.arc(cx, cy, innerR, 0, Math.PI * 2, true)
-              ctx.closePath()
-            }
-            ctx.fillShape(shape)
-          } : undefined}
+          strokeWidth={isShape ? (isSelected ? 3 : 2.5) : isSelected ? 2.5 : 0}
+          hitFunc={
+            isShape
+              ? (ctx, shape) => {
+                  const r = Math.min(width, height) / 2
+                  const cx = width / 2
+                  const cy = height / 2
+                  const hw = 8
+                  const innerR = Math.max(0, r - hw)
+                  ctx.beginPath()
+                  ctx.arc(cx, cy, r + hw, 0, Math.PI * 2, false)
+                  ctx.closePath()
+                  if (innerR > 0) {
+                    ctx.moveTo(cx + innerR, cy)
+                    ctx.arc(cx, cy, innerR, 0, Math.PI * 2, true)
+                    ctx.closePath()
+                  }
+                  ctx.fillShape(shape)
+                }
+              : undefined
+          }
         />
       ) : (
         <Rect
@@ -119,23 +140,27 @@ export function StageItemNode({
           shadowColor={isSelected ? '#ffffff' : color}
           shadowOpacity={isSelected ? 0.5 : 0.35}
           stroke={isSelected ? '#ffffff' : color}
-          strokeWidth={isShape ? (isSelected ? 3 : 2.5) : (isSelected ? 2.5 : 0)}
-          hitFunc={isShape ? (ctx, shape) => {
-            const hw = 8
-            const innerW = Math.max(0, width - hw * 2)
-            const innerH = Math.max(0, height - hw * 2)
-            ctx.beginPath()
-            ctx.rect(0, 0, width, height)
-            if (innerW > 0 && innerH > 0) {
-              // Counterclockwise inner rect creates a hole via nonzero winding rule
-              ctx.moveTo(hw, hw)
-              ctx.lineTo(hw, hw + innerH)
-              ctx.lineTo(hw + innerW, hw + innerH)
-              ctx.lineTo(hw + innerW, hw)
-              ctx.closePath()
-            }
-            ctx.fillShape(shape)
-          } : undefined}
+          strokeWidth={isShape ? (isSelected ? 3 : 2.5) : isSelected ? 2.5 : 0}
+          hitFunc={
+            isShape
+              ? (ctx, shape) => {
+                  const hw = 8
+                  const innerW = Math.max(0, width - hw * 2)
+                  const innerH = Math.max(0, height - hw * 2)
+                  ctx.beginPath()
+                  ctx.rect(0, 0, width, height)
+                  if (innerW > 0 && innerH > 0) {
+                    // Counterclockwise inner rect creates a hole via nonzero winding rule
+                    ctx.moveTo(hw, hw)
+                    ctx.lineTo(hw, hw + innerH)
+                    ctx.lineTo(hw + innerW, hw + innerH)
+                    ctx.lineTo(hw + innerW, hw)
+                    ctx.closePath()
+                  }
+                  ctx.fillShape(shape)
+                }
+              : undefined
+          }
         />
       )}
 

@@ -77,9 +77,10 @@ export function registerDbHandlers(ipcMain: IpcMain): void {
 
   // Stage items
   ipcMain.handle('db:items:list', (_e, projectId: string) => {
-    return getDb()
+    const rows = getDb()
       .prepare('SELECT * FROM stage_items WHERE project_id = ? ORDER BY sort_order')
-      .all(projectId) as StageItem[]
+      .all(projectId) as (StageItem & { extra: string | null })[]
+    return rows.map((r) => ({ ...r, extra: r.extra ? JSON.parse(r.extra) : null })) as StageItem[]
   })
 
   ipcMain.handle('db:items:save', (_e, item: StageItem) => {
