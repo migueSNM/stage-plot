@@ -25,6 +25,7 @@ export function Toolbar(): JSX.Element {
   const [showProjects, setShowProjects] = useState(false)
   const [showExport, setShowExport] = useState(false)
   const [newName, setNewName] = useState('')
+  const [dbError, setDbError] = useState<string | null>(null)
   const exportMenuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -39,7 +40,12 @@ export function Toolbar(): JSX.Element {
   }, [showExport])
 
   async function handleOpen(): Promise<void> {
-    await loadProjects()
+    try {
+      await loadProjects()
+      setDbError(null)
+    } catch (err) {
+      setDbError(err instanceof Error ? err.message : String(err))
+    }
     setShowProjects(true)
   }
 
@@ -180,6 +186,12 @@ export function Toolbar(): JSX.Element {
         >
           <div className="bg-surface rounded-xl p-6 w-96 shadow-2xl border border-border">
             <h2 className="text-lg font-bold mb-4">{t('projects.title')}</h2>
+
+            {dbError && (
+              <div className="mb-4 p-3 rounded bg-red-900/40 border border-red-700 text-red-300 text-xs font-mono break-all">
+                {dbError}
+              </div>
+            )}
 
             <div className="flex gap-2 mb-4">
               <input

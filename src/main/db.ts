@@ -8,9 +8,14 @@ let db: Database.Database
 function getDb(): Database.Database {
   if (!db) {
     const dbPath = join(app.getPath('userData'), 'stage-plot.db')
-    db = new Database(dbPath)
-    db.pragma('journal_mode = WAL')
-    migrate(db)
+    try {
+      db = new Database(dbPath)
+      db.pragma('journal_mode = WAL')
+      migrate(db)
+    } catch (err) {
+      console.error('[stage-plot] Failed to open database:', err)
+      throw err
+    }
   }
   return db
 }
