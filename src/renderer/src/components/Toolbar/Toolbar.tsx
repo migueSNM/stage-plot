@@ -38,7 +38,12 @@ export function Toolbar(): JSX.Element {
   const [dbError, setDbError] = useState<string | null>(null)
   const [importError, setImportError] = useState<string | null>(null)
   const [importSuccess, setImportSuccess] = useState<string | null>(null)
+  const [appVersion, setAppVersion] = useState('')
   const exportMenuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    window.api.app.getVersion().then(setAppVersion)
+  }, [])
 
   useEffect(() => {
     if (!showExport) return
@@ -248,11 +253,14 @@ export function Toolbar(): JSX.Element {
           )}
         </div>
 
-        {/* Right-side: language + theme */}
+        {/* Right-side: version + language + theme */}
         <div
           className="flex items-center gap-1 pr-3"
           style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
         >
+          {appVersion && (
+            <span className="text-[10px] font-mono text-muted/50 pr-1">v{appVersion}</span>
+          )}
           <button
             onClick={() => setLanguage(language === 'en' ? 'es' : 'en')}
             title={t('toolbar.language')}

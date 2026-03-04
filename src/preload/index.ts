@@ -31,6 +31,7 @@ const api = {
     importJson: () => invoke('file:importJson')
   },
   app: {
+    getVersion: () => invoke('app:version'),
     checkUpdate: () => invoke('app:check-update'),
     openReleasePage: (url: string) => invoke('app:open-release-page', url)
   }

@@ -73,6 +73,7 @@ export interface IpcChannels {
   'db:items:deleteByProject': { args: [projectId: string]; return: void }
   'file:exportJson': { args: [data: StagePlotExportData]; return: boolean }
   'file:importJson': { args: []; return: StagePlotExportData | null }
+  'app:version': { args: []; return: string }
   'app:check-update': { args: []; return: UpdateInfo | null }
   'app:open-release-page': { args: [url: string]; return: void }
 }
