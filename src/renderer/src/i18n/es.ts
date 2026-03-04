@@ -66,6 +66,9 @@ const es = {
     importError: 'Error al importar el archivo. Asegúrate de que es un archivo .stageplot válido.'
   },
   updates: {
+    checking: 'Buscando actualizaciones…',
+    upToDate: 'Al día',
+    error: 'No se pudo buscar actualizaciones',
     available: 'La versión {{version}} está disponible',
     download: 'Descargar',
     dismiss: 'Cerrar'
