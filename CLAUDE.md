@@ -49,6 +49,11 @@ src/
 - **Keyboard shortcuts** matter — power users (sound engineers) will use them heavily
 - Items on canvas **keep their stored label** when language changes — only new items get the new language's name
 - Undo/redo must always be functional (Cmd/Ctrl+Z, Cmd/Ctrl+Shift+Z)
+- **Hit targets must be generous** — interactive areas (click, drag) should be at least 12px wide; never rely on the visual stroke width alone. For outline-only shapes use `hitFunc` to create a thick invisible ring around the border.
+- **Labels are part of the item** — the text label below any canvas item should be included in the hit region so users can click or drag from the name, not just the shape body.
+- **Feedback on every interaction** — selections show a visible highlight (white stroke/glow), hover states exist on all buttons, destructive actions are clearly labelled.
+- **No surprising side-effects** — clicking inside a transparent shape should pass through to items beneath it; body-dragging a cable disconnects it (intentional); cancelling a dialog must leave state unchanged.
+- **Error states are non-blocking** — failed operations (import error, update check failure) show a dismissible message and never crash or freeze the UI.
 
 ## StageItemType values
 `microphone | monitor | amp | keyboard | drums | di_box | speaker_main | person | generic | rectangle | circle`
@@ -61,7 +66,7 @@ src/
 - Outline-only: transparent fill, colored stroke (no emoji icon)
 - Scalable (resize via Transformer) + rotatable
 - `circle` uses `keepRatio={true}` on Transformer to stay circular
-- **Hollow hit region** via `hitFunc`: clicks on the border select the shape, clicks in the transparent interior pass through to items underneath (nonzero winding rule: outer path clockwise + inner path counterclockwise = ring)
+- **Hollow hit region** via `hitFunc`: clicks on the border (±12px) select the shape, clicks in the transparent interior pass through to items underneath (nonzero winding rule: outer path clockwise + inner path counterclockwise = ring). The label zone below the shape is also included as a hit target.
 
 ## State management
 - `useProjectStore` — projects, items, `undoStack`, `redoStack` (max 50 entries), `exportFns`

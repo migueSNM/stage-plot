@@ -114,7 +114,7 @@ export function StageItemNode({
                   const r = Math.min(width, height) / 2
                   const cx = width / 2
                   const cy = height / 2
-                  const hw = 8
+                  const hw = 12
                   const innerR = Math.max(0, r - hw)
                   ctx.beginPath()
                   ctx.arc(cx, cy, r + hw, 0, Math.PI * 2, false)
@@ -124,6 +124,8 @@ export function StageItemNode({
                     ctx.arc(cx, cy, innerR, 0, Math.PI * 2, true)
                     ctx.closePath()
                   }
+                  // Label zone below the circle (nonzero winding: clockwise = filled)
+                  ctx.rect(-12, height + 4, width + 24, LABEL_HEIGHT)
                   ctx.fillShape(shape)
                 }
               : undefined
@@ -144,7 +146,7 @@ export function StageItemNode({
           hitFunc={
             isShape
               ? (ctx, shape) => {
-                  const hw = 8
+                  const hw = 12
                   const innerW = Math.max(0, width - hw * 2)
                   const innerH = Math.max(0, height - hw * 2)
                   ctx.beginPath()
@@ -157,6 +159,8 @@ export function StageItemNode({
                     ctx.lineTo(hw + innerW, hw)
                     ctx.closePath()
                   }
+                  // Label zone below the shape (clockwise = filled, outside the hole)
+                  ctx.rect(-12, height + 4, width + 24, LABEL_HEIGHT)
                   ctx.fillShape(shape)
                 }
               : undefined
