@@ -1,6 +1,6 @@
 {
   "name": "stage-plot",
-  "version": "0.3.6",
+  "version": "0.3.7",
   "description": "Desktop app for creating stage plots for live events",
   "main": "./out/main/index.js",
   "homepage": "./",
@@ -9,9 +9,9 @@
     "dev": "electron-vite dev",
     "build": "electron-vite build",
     "preview": "electron-vite preview",
-    "package": "electron-vite build && electron-builder",
-    "package:mac": "electron-vite build && electron-builder --mac",
-    "package:win": "electron-vite build && electron-builder --win",
+    "package": "electron-vite build && electron-builder --publish never",
+    "package:mac": "electron-vite build && electron-builder --mac --publish never",
+    "package:win": "electron-vite build && electron-builder --win --publish never",
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
     "lint": "eslint . --ext .ts,.tsx"
   },

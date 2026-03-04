@@ -5,7 +5,7 @@ import { ItemPalette } from './components/ItemPalette/ItemPalette'
 import { StageCanvas } from './components/StageCanvas/StageCanvas'
 import { useProjectStore } from './store/useProjectStore'
 
-const REPO = 'miguesnm/stage-plot'
+const REPO = 'miguesnm/stage-plot-releases'
 const RELEASES_URL = `https://github.com/${REPO}/releases/latest`
 const API_URL = `https://api.github.com/repos/${REPO}/releases/latest`
 
