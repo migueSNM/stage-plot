@@ -207,22 +207,21 @@ Migrations run on every app startup and are safe to re-run (use `IF NOT EXISTS` 
 
 ## Building & Distributing
 
-### Executables
+### Downloading a release
 
-After running a build, distributables are placed in `dist/`:
+Pre-built installers are attached to every release on GitHub:
 
-| File | Platform | For |
-|------|----------|-----|
-| `dist/stage-plot-x.x.x-arm64.dmg` | macOS | Apple Silicon (M1/M2/M3/M4) |
-| `dist/stage-plot-x.x.x-x64.dmg` | macOS | Intel Macs |
-| `dist/stage-plot-x.x.x-setup.exe` | Windows | x64 PCs |
-| `dist/mac-arm64/Stage Plot.app` | macOS | Raw app bundle (arm64) |
-| `dist/mac/Stage Plot.app` | macOS | Raw app bundle (x64) |
+**https://github.com/migueSNM/stage-plot/releases**
+
+| File | Platform |
+|------|----------|
+| `Stage Plot-x.x.x.dmg` | macOS — universal (Apple Silicon + Intel, one file) |
+| `Stage Plot Setup x.x.x.exe` | Windows x64 |
 
 ### Build commands
 
 ```bash
-# macOS (both Intel and Apple Silicon DMGs) — run from a Mac
+# macOS universal DMG (arm64 + x86_64) — run from a Mac
 npm run package:mac
 
 # Windows installer — run from a Windows machine (or use GitHub Actions)
@@ -234,16 +233,23 @@ npm run package:win
 
 > **Windows from Mac**: You cannot build the Windows `.exe` from a Mac. Use the GitHub Actions workflow instead — it runs on a real Windows machine in the cloud.
 
-### Installing on macOS (for the recipient)
+### Installing on macOS
 
 1. Open the `.dmg` file
-2. Drag **Stage Plot** to the Applications folder
-3. First launch: right-click the app → **Open** → confirm (needed because the app is unsigned)
+2. Drag **Stage Plot** into the Applications folder
+3. Try to open it — macOS will block it with a Gatekeeper warning because the app is not yet notarized
 
-### Installing on Windows (for the recipient)
+**To open it anyway (one-time step):**
 
-1. Run `stage-plot-x.x.x-setup.exe`
-2. Windows SmartScreen may warn about an unknown publisher — click **More info → Run anyway**
+- **macOS Ventura / Sonoma / Sequoia:** Go to **System Settings → Privacy & Security**, scroll down to the "Security" section, and click **"Open Anyway"** next to the Stage Plot message. Then open the app normally.
+- **macOS Monterey and earlier:** Go to **System Preferences → Security & Privacy → General** and click **"Open Anyway"**.
+
+> This prompt only appears once. After approving it, the app opens normally every time.
+
+### Installing on Windows
+
+1. Run `Stage Plot Setup x.x.x.exe`
+2. If Windows SmartScreen shows an "Unknown publisher" warning, click **More info → Run anyway**
 
 ---
 
