@@ -6,6 +6,8 @@ const es = {
     export: 'Exportar',
     exportPng: 'Exportar PNG',
     exportPdf: 'Exportar PDF',
+    exportJson: 'Exportar JSON',
+    importJson: 'Importar JSON',
     undo: 'Deshacer',
     redo: 'Rehacer',
     language: 'Idioma',
@@ -58,6 +60,15 @@ const es = {
     rotateCCW: 'Rotar 90° CCW',
     changeColor: 'Cambiar Color',
     deleteSelected: 'Eliminar Seleccionados ({{count}})'
+  },
+  fileOps: {
+    importSuccess: 'Proyecto "{{name}}" importado exitosamente',
+    importError: 'Error al importar el archivo. Asegúrate de que es un archivo .stageplot válido.'
+  },
+  updates: {
+    available: 'La versión {{version}} está disponible',
+    download: 'Descargar',
+    dismiss: 'Cerrar'
   }
 } as const
 

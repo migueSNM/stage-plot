@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useProjectStore } from '../../store/useProjectStore'
 import { usePrefsStore } from '../../store/usePrefsStore'
+import type { StagePlotExportData } from '../../../../shared/types'
 
 const isMac = window.api.platform === 'darwin'
 
@@ -15,10 +16,12 @@ export function Toolbar(): JSX.Element {
   const {
     projects,
     activeProject,
+    items,
     loadProjects,
     openProject,
     createProject,
     closeProject,
+    importProject,
     exportFns,
     undoStack,
     redoStack,
@@ -33,6 +36,8 @@ export function Toolbar(): JSX.Element {
   const [showExport, setShowExport] = useState(false)
   const [newName, setNewName] = useState('')
   const [dbError, setDbError] = useState<string | null>(null)
+  const [importError, setImportError] = useState<string | null>(null)
+  const [importSuccess, setImportSuccess] = useState<string | null>(null)
   const exportMenuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -62,6 +67,31 @@ export function Toolbar(): JSX.Element {
     await openProject(project.id)
     setNewName('')
     setShowProjects(false)
+  }
+
+  async function handleExportJson(): Promise<void> {
+    if (!activeProject) return
+    const data: StagePlotExportData = { version: 1, project: activeProject, items }
+    await window.api.files.exportJson(data)
+    setShowExport(false)
+  }
+
+  async function handleImportJson(): Promise<void> {
+    setShowExport(false)
+    setImportError(null)
+    setImportSuccess(null)
+    const data = await window.api.files.importJson()
+    if (!data) {
+      setImportError(t('fileOps.importError'))
+      return
+    }
+    try {
+      const project = await importProject(data)
+      setImportSuccess(t('fileOps.importSuccess', { name: project.name }))
+      setTimeout(() => setImportSuccess(null), 4000)
+    } catch {
+      setImportError(t('fileOps.importError'))
+    }
   }
 
   const canUndo = undoStack.length > 0
@@ -160,7 +190,7 @@ export function Toolbar(): JSX.Element {
 
               <div className="w-px h-5 bg-border mx-1" />
 
-              {/* Export */}
+              {/* Export / Import */}
               <div ref={exportMenuRef} className="relative">
                 <button
                   onClick={() => setShowExport((v) => !v)}
@@ -171,7 +201,15 @@ export function Toolbar(): JSX.Element {
                 </button>
                 {showExport && (
                   <div className="absolute top-full left-0 mt-1 bg-surface border border-border
-                                  rounded-lg shadow-2xl py-1 min-w-36 z-50 overflow-hidden">
+                                  rounded-lg shadow-2xl py-1 min-w-40 z-50 overflow-hidden">
+                    <button
+                      className="w-full text-left px-4 py-2 text-xs hover:bg-surface-2
+                                 transition-colors flex items-center gap-2"
+                      onClick={handleImportJson}
+                    >
+                      📂 {t('toolbar.importJson')}
+                    </button>
+                    <div className="h-px bg-border mx-2 my-1" />
                     <button
                       className="w-full text-left px-4 py-2 text-xs hover:bg-surface-2
                                  transition-colors flex items-center gap-2"
@@ -191,6 +229,13 @@ export function Toolbar(): JSX.Element {
                       }}
                     >
                       📄 {t('toolbar.exportPdf')}
+                    </button>
+                    <button
+                      className="w-full text-left px-4 py-2 text-xs hover:bg-surface-2
+                                 transition-colors flex items-center gap-2"
+                      onClick={handleExportJson}
+                    >
+                      💾 {t('toolbar.exportJson')}
                     </button>
                   </div>
                 )}
@@ -226,6 +271,23 @@ export function Toolbar(): JSX.Element {
           </button>
         </div>
       </header>
+
+      {/* Import feedback toasts */}
+      {importError && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-lg
+                        bg-red-900/90 border border-red-700 text-red-200 text-xs shadow-xl
+                        flex items-center gap-2">
+          <span>⚠</span> {importError}
+          <button onClick={() => setImportError(null)} className="ml-2 opacity-60 hover:opacity-100 cursor-pointer">✕</button>
+        </div>
+      )}
+      {importSuccess && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-lg
+                        bg-green-900/90 border border-green-700 text-green-200 text-xs shadow-xl
+                        flex items-center gap-2">
+          <span>✓</span> {importSuccess}
+        </div>
+      )}
 
       {/* Projects modal */}
       {showProjects && (

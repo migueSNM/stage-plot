@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { Project, StageItem } from '../../../shared/types'
+import type { Project, StageItem, StagePlotExportData } from '../../../shared/types'
 
 const MAX_HISTORY = 50
 
@@ -44,6 +44,7 @@ interface ProjectStore {
   saveProject: (project: Project) => Promise<void>
   deleteProject: (id: string) => Promise<void>
   closeProject: () => void
+  importProject: (data: StagePlotExportData) => Promise<Project>
 
   // Canvas view actions
   setCanvasScale: (scale: number) => void
@@ -215,6 +216,46 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
 
   closeProject: () => {
     set({ activeProject: null, items: [], undoStack: [], redoStack: [] })
+  },
+
+  importProject: async (data) => {
+    const ts = now()
+    const newProject: Project = {
+      id: generateId(),
+      name: data.project.name,
+      description: data.project.description,
+      created_at: ts,
+      updated_at: ts
+    }
+
+    // Build old→new ID map for all items
+    const idMap = new Map<string, string>()
+    data.items.forEach((item) => idMap.set(item.id, generateId()))
+
+    const remappedItems: StageItem[] = data.items.map((item, idx) => {
+      const newId = idMap.get(item.id)!
+      let extra = item.extra
+      if (extra && CABLE_TYPES.has(item.type)) {
+        const cableExtra = extra as { fromId: string | null; toId: string | null; x2: number; y2: number }
+        extra = {
+          ...cableExtra,
+          fromId: cableExtra.fromId ? (idMap.get(cableExtra.fromId) ?? null) : null,
+          toId: cableExtra.toId ? (idMap.get(cableExtra.toId) ?? null) : null
+        }
+      }
+      return {
+        ...item,
+        id: newId,
+        project_id: newProject.id,
+        extra,
+        sort_order: idx
+      }
+    })
+
+    await window.api.projects.save(newProject)
+    if (remappedItems.length) await window.api.items.saveMany(remappedItems)
+    set((s) => ({ projects: [newProject, ...s.projects] }))
+    return newProject
   },
 
   // ── Items ──────────────────────────────────────────────────────────────────

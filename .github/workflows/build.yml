@@ -8,7 +8,7 @@ on:
 
 jobs:
   build-mac:
-    runs-on: macos-latest
+    runs-on: macos-latest  # Apple Silicon (arm64); Rosetta 2 handles x86_64 slice
     steps:
       - uses: actions/checkout@v4
 
@@ -16,10 +16,15 @@ jobs:
         with:
           node-version: 20
 
+      # Rosetta 2 is needed for electron-builder to rebuild better-sqlite3 for x86_64
+      # when producing the universal (arm64 + x86_64) DMG
+      - name: Install Rosetta 2
+        run: softwareupdate --install-rosetta --agree-to-license
+
       - name: Install dependencies
         run: npm ci
 
-      - name: Build macOS
+      - name: Build macOS (universal)
         run: npm run package:mac
 
       - name: Upload macOS artifacts
@@ -40,7 +45,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build Windows
+      - name: Build Windows (x64)
         run: npm run package:win
 
       - name: Upload Windows artifacts

@@ -44,6 +44,21 @@ export interface StageItem {
   sort_order: number
 }
 
+// ─── Update check ─────────────────────────────────────────────────────────────
+
+export interface UpdateInfo {
+  version: string
+  url: string
+}
+
+// ─── Export / Import ──────────────────────────────────────────────────────────
+
+export interface StagePlotExportData {
+  version: number
+  project: Project
+  items: StageItem[]
+}
+
 // ─── IPC Channel map (for type-safe IPC) ─────────────────────────────────────
 
 export interface IpcChannels {
@@ -56,4 +71,7 @@ export interface IpcChannels {
   'db:items:saveMany': { args: [items: StageItem[]]; return: void }
   'db:items:delete': { args: [id: string]; return: void }
   'db:items:deleteByProject': { args: [projectId: string]; return: void }
+  'file:exportJson': { args: [data: StagePlotExportData]; return: boolean }
+  'file:importJson': { args: []; return: StagePlotExportData | null }
+  'app:open-release-page': { args: [url: string]; return: void }
 }

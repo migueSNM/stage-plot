@@ -1,6 +1,6 @@
 {
   "name": "stage-plot",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Desktop app for creating stage plots for live events",
   "main": "./out/main/index.js",
   "homepage": "./",
@@ -26,6 +26,27 @@
     "react-i18next": "^16.5.4",
     "react-konva": "^18.2.10",
     "zustand": "^5.0.1"
+  },
+  "build": {
+    "appId": "com.stageplot.app",
+    "productName": "Stage Plot",
+    "directories": {
+      "output": "dist"
+    },
+    "files": ["out/**/*"],
+    "asarUnpack": ["**/*.node"],
+    "mac": {
+      "category": "public.app-category.music",
+      "target": [
+        { "target": "dmg", "arch": ["universal"] }
+      ]
+    },
+    "win": {
+      "target": [
+        { "target": "nsis", "arch": ["x64"] }
+      ]
+    },
+    "nativeRebuilder": "sequential"
   },
   "devDependencies": {
     "@electron-toolkit/eslint-config-prettier": "^2.0.0",

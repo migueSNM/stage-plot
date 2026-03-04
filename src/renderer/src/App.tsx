@@ -4,12 +4,14 @@ import { Toolbar } from './components/Toolbar/Toolbar'
 import { ItemPalette } from './components/ItemPalette/ItemPalette'
 import { StageCanvas } from './components/StageCanvas/StageCanvas'
 import { useProjectStore } from './store/useProjectStore'
+import type { UpdateInfo } from '../../shared/types'
 
 export default function App(): JSX.Element {
   const { t } = useTranslation()
   const { activeProject, undo, redo } = useProjectStore()
   const containerRef = useRef<HTMLDivElement>(null)
   const [canvasSize, setCanvasSize] = useState({ width: 800, height: 600 })
+  const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null)
 
   // Observe canvas container size
   useEffect(() => {
@@ -21,6 +23,11 @@ export default function App(): JSX.Element {
     })
     ro.observe(el)
     return () => ro.disconnect()
+  }, [])
+
+  // Listen for update notification from main process
+  useEffect(() => {
+    window.api.app.onUpdateAvailable((info) => setUpdateInfo(info))
   }, [])
 
   // Global undo/redo keyboard shortcuts (work even when canvas isn't focused)
@@ -45,6 +52,30 @@ export default function App(): JSX.Element {
   return (
     <div className="flex flex-col h-full">
       <Toolbar />
+      {updateInfo && (
+        <div className="flex items-center justify-between gap-3 px-4 py-2
+                        bg-accent/15 border-b border-accent/30 text-sm flex-shrink-0">
+          <span className="text-white/80">
+            🎉 {t('updates.available', { version: updateInfo.version })}
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => window.api.app.openReleasePage(updateInfo.url)}
+              className="px-3 py-1 rounded bg-accent text-white text-xs font-medium
+                         hover:opacity-90 transition-opacity cursor-pointer"
+            >
+              {t('updates.download')}
+            </button>
+            <button
+              onClick={() => setUpdateInfo(null)}
+              className="text-white/50 hover:text-white/80 transition-colors
+                         text-xs cursor-pointer px-1"
+            >
+              {t('updates.dismiss')}
+            </button>
+          </div>
+        </div>
+      )}
       <div className="flex flex-1 overflow-hidden">
         <ItemPalette />
         <main ref={containerRef} className="flex-1 overflow-hidden relative">
