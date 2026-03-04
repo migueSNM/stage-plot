@@ -66,12 +66,9 @@ const en = {
     importError: 'Failed to import file. Make sure it is a valid .stageplot file.'
   },
   updates: {
-    checking: 'Checking for updates…',
-    upToDate: 'Up to date',
-    error: 'Could not check for updates',
-    available: 'Version {{version}} is available',
-    download: 'Download',
-    dismiss: 'Dismiss'
+    downloading: 'Downloading update v{{version}}…',
+    ready: 'Update downloaded — restart to install.',
+    restart: 'Restart now'
   }
 } as const
 

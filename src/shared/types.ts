@@ -74,5 +74,5 @@ export interface IpcChannels {
   'file:exportJson': { args: [data: StagePlotExportData]; return: boolean }
   'file:importJson': { args: []; return: StagePlotExportData | null }
   'app:version': { args: []; return: string }
-  'app:open-release-page': { args: [url: string]; return: void }
+  'app:install-update': { args: []; return: void }
 }

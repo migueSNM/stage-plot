@@ -1,6 +1,6 @@
 {
   "name": "stage-plot",
-  "version": "0.3.7",
+  "version": "0.4.0",
   "description": "Desktop app for creating stage plots for live events",
   "main": "./out/main/index.js",
   "homepage": "./",
@@ -18,6 +18,7 @@
   "dependencies": {
     "better-sqlite3": "^11.3.0",
     "electron-store": "^10.0.0",
+    "electron-updater": "^6.8.3",
     "i18next": "^25.8.13",
     "jspdf": "^4.2.0",
     "konva": "^9.3.6",
@@ -33,17 +34,32 @@
     "directories": {
       "output": "dist"
     },
-    "files": ["out/**/*"],
-    "asarUnpack": ["**/*.node"],
+    "files": [
+      "out/**/*"
+    ],
+    "asarUnpack": [
+      "**/*.node"
+    ],
+    "publish": {
+      "provider": "github",
+      "owner": "migueSNM",
+      "repo": "stage-plot"
+    },
     "mac": {
       "category": "public.app-category.music",
       "target": [
-        { "target": "dmg", "arch": ["universal"] }
+        { "target": "dmg", "arch": ["universal"] },
+        { "target": "zip", "arch": ["universal"] }
       ]
     },
     "win": {
       "target": [
-        { "target": "nsis", "arch": ["x64"] }
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
       ]
     },
     "nativeRebuilder": "sequential"

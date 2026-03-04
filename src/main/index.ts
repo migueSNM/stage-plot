@@ -49,7 +49,7 @@ app.whenReady().then(() => {
 
   registerDbHandlers(ipcMain)
   registerFileHandlers(ipcMain, () => mainWindow)
-  registerUpdaterHandlers(ipcMain)
+  registerUpdaterHandlers(ipcMain, () => mainWindow)
 
   createWindow()
 

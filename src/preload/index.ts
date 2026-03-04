@@ -32,7 +32,13 @@ const api = {
   },
   app: {
     getVersion: () => invoke('app:version'),
-    openReleasePage: (url: string) => invoke('app:open-release-page', url)
+    installUpdate: () => invoke('app:install-update'),
+    onUpdateAvailable: (cb: (version: string) => void) => {
+      ipcRenderer.on('app:update-available', (_event, version: string) => cb(version))
+    },
+    onUpdateDownloaded: (cb: () => void) => {
+      ipcRenderer.on('app:update-downloaded', () => cb())
+    }
   }
 }
 
