@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import type { IpcChannels, StagePlotExportData, UpdateInfo } from '../shared/types'
+import type { IpcChannels, StagePlotExportData } from '../shared/types'
 
 // Type-safe IPC invoke helper
 function invoke<K extends keyof IpcChannels>(
@@ -31,9 +31,7 @@ const api = {
     importJson: () => invoke('file:importJson')
   },
   app: {
-    onUpdateAvailable: (callback: (info: UpdateInfo) => void) => {
-      ipcRenderer.on('app:update-available', (_event, info: UpdateInfo) => callback(info))
-    },
+    checkUpdate: () => invoke('app:check-update'),
     openReleasePage: (url: string) => invoke('app:open-release-page', url)
   }
 }

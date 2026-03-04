@@ -3,7 +3,7 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { registerDbHandlers } from './db'
 import { registerFileHandlers } from './files'
-import { checkForUpdates, registerUpdaterHandlers } from './updater'
+import { registerUpdaterHandlers } from './updater'
 
 let mainWindow: BrowserWindow | null = null
 
@@ -26,8 +26,6 @@ function createWindow(): void {
 
   win.once('ready-to-show', () => {
     win.show()
-    // Check for updates after the window is visible; runs in background
-    checkForUpdates(win)
   })
 
   win.webContents.setWindowOpenHandler((details) => {

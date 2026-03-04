@@ -25,9 +25,12 @@ export default function App(): JSX.Element {
     return () => ro.disconnect()
   }, [])
 
-  // Listen for update notification from main process
+  // Pull update info from main process after mount — avoids the race condition
+  // where webContents.send fires before the renderer listener is registered
   useEffect(() => {
-    window.api.app.onUpdateAvailable((info) => setUpdateInfo(info))
+    window.api.app.checkUpdate().then((info) => {
+      if (info) setUpdateInfo(info)
+    })
   }, [])
 
   // Global undo/redo keyboard shortcuts (work even when canvas isn't focused)

@@ -1,5 +1,5 @@
 import { net, app, shell, IpcMain } from 'electron'
-import type { BrowserWindow } from 'electron'
+import type { UpdateInfo } from '../shared/types'
 
 const REPO = 'miguesnm/stage-plot'
 const API_URL = `https://api.github.com/repos/${REPO}/releases/latest`
@@ -21,25 +21,30 @@ function isNewer(latestTag: string, currentVersion: string): boolean {
   return false
 }
 
-export async function checkForUpdates(win: BrowserWindow): Promise<void> {
+async function fetchLatestRelease(): Promise<UpdateInfo | null> {
   try {
     const res = await net.fetch(API_URL, {
       headers: { 'User-Agent': `stage-plot/${app.getVersion()}` }
     })
-    if (!res.ok) return
+    if (!res.ok) return null
     const data = (await res.json()) as { tag_name: string }
     if (isNewer(data.tag_name, app.getVersion())) {
-      win.webContents.send('app:update-available', {
+      return {
         version: data.tag_name.replace(/^v/, ''),
         url: RELEASES_URL
-      })
+      }
     }
+    return null
   } catch {
-    // Offline or API error — fail silently
+    return null
   }
 }
 
 export function registerUpdaterHandlers(ipcMain: IpcMain): void {
+  // Renderer calls this on mount — pull model avoids the push race condition
+  // where webContents.send fires before the renderer listener is registered
+  ipcMain.handle('app:check-update', () => fetchLatestRelease())
+
   ipcMain.handle('app:open-release-page', (_event, url: string) => {
     shell.openExternal(url)
   })
