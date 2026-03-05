@@ -16,17 +16,25 @@ jobs:
     outputs:
       release_id: ${{ steps.create.outputs.release_id }}
     steps:
-      - name: Create draft release
+      - name: Create draft release (idempotent)
         id: create
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          RELEASE_ID=$(gh api repos/${{ github.repository }}/releases \
-            -X POST \
-            -f tag_name="${{ github.ref_name }}" \
-            -f name="${{ github.ref_name }}" \
-            -F draft=true \
-            --jq '.id')
+          # Reuse existing draft if this job is being retried
+          EXISTING=$(gh api repos/${{ github.repository }}/releases \
+            --jq ".[] | select(.tag_name == \"${{ github.ref_name }}\" and .draft == true) | .id" \
+            | head -1)
+          if [ -n "$EXISTING" ]; then
+            RELEASE_ID=$EXISTING
+          else
+            RELEASE_ID=$(gh api repos/${{ github.repository }}/releases \
+              -X POST \
+              -f tag_name="${{ github.ref_name }}" \
+              -f name="${{ github.ref_name }}" \
+              -F draft=true \
+              --jq '.id')
+          fi
           echo "release_id=$RELEASE_ID" >> $GITHUB_OUTPUT
 
   build-mac:
