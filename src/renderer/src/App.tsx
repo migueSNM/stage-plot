@@ -5,7 +5,7 @@ import { ItemPalette } from './components/ItemPalette/ItemPalette'
 import { StageCanvas } from './components/StageCanvas/StageCanvas'
 import { useProjectStore } from './store/useProjectStore'
 
-type UpdateStatus = 'downloading' | 'ready' | null
+type UpdateStatus = 'downloading' | 'ready' | 'error' | null
 
 export default function App(): JSX.Element {
   const { t } = useTranslation()
@@ -35,6 +35,9 @@ export default function App(): JSX.Element {
     })
     window.api.app.onUpdateDownloaded(() => {
       setUpdateStatus('ready')
+    })
+    window.api.app.onUpdateError(() => {
+      setUpdateStatus('error')
     })
   }, [])
 
@@ -79,6 +82,19 @@ export default function App(): JSX.Element {
                        hover:opacity-90 transition-opacity cursor-pointer"
           >
             {t('updates.restart')}
+          </button>
+        </div>
+      )}
+      {updateStatus === 'error' && (
+        <div className="flex items-center justify-between gap-3 px-4 py-1.5
+                        border-b border-border/40 flex-shrink-0">
+          <span className="text-[11px] text-muted/60">{t('updates.installError')}</span>
+          <button
+            onClick={() => { window.api.app.openReleases(); setUpdateStatus(null) }}
+            className="px-3 py-0.5 rounded bg-white/10 text-white/70 text-xs
+                       hover:bg-white/15 transition-colors cursor-pointer"
+          >
+            {t('updates.downloadManually')}
           </button>
         </div>
       )}

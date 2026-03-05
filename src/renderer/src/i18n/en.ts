@@ -68,7 +68,9 @@ const en = {
   updates: {
     downloading: 'Downloading update v{{version}}…',
     ready: 'Update downloaded — restart to install.',
-    restart: 'Restart now'
+    restart: 'Restart now',
+    installError: 'Could not install update automatically.',
+    downloadManually: 'Download manually'
   }
 } as const
 

@@ -33,11 +33,15 @@ const api = {
   app: {
     getVersion: () => invoke('app:version'),
     installUpdate: () => invoke('app:install-update'),
+    openReleases: () => invoke('app:open-releases'),
     onUpdateAvailable: (cb: (version: string) => void) => {
       ipcRenderer.on('app:update-available', (_event, version: string) => cb(version))
     },
     onUpdateDownloaded: (cb: () => void) => {
       ipcRenderer.on('app:update-downloaded', () => cb())
+    },
+    onUpdateError: (cb: () => void) => {
+      ipcRenderer.on('app:update-error', () => cb())
     }
   }
 }

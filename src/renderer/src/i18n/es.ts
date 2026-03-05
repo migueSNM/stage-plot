@@ -68,7 +68,9 @@ const es = {
   updates: {
     downloading: 'Descargando actualización v{{version}}…',
     ready: 'Actualización descargada — reinicia para instalar.',
-    restart: 'Reiniciar ahora'
+    restart: 'Reiniciar ahora',
+    installError: 'No se pudo instalar la actualización automáticamente.',
+    downloadManually: 'Descargar manualmente'
   }
 } as const
 
