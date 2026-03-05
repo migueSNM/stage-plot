@@ -4,26 +4,6 @@ import type { StageItem, StageItemType } from '../../../../shared/types'
 
 export const LABEL_HEIGHT = 22
 
-export const ITEM_COLORS: Record<StageItemType, string> = {
-  microphone: '#e94560',
-  monitor: '#f5a623',
-  amp: '#7ed321',
-  keyboard: '#4a90e2',
-  drums: '#9b59b6',
-  di_box: '#1abc9c',
-  speaker_main: '#e67e22',
-  person: '#3498db',
-  generic: '#95a5a6',
-  rectangle: '#8a9ec0',
-  circle: '#a08ac0',
-  cable_xlr: '#4a90e2',
-  cable_trs: '#7ed321',
-  cable_ts: '#f5a623',
-  cable_midi: '#9b59b6',
-  cable_speakon: '#f1c40f',
-  text: '#ffffff'
-}
-
 export const ITEM_ICONS: Record<StageItemType, string> = {
   microphone: '🎙',
   monitor: '📢',
@@ -34,6 +14,13 @@ export const ITEM_ICONS: Record<StageItemType, string> = {
   speaker_main: '📯',
   person: '🎤',
   generic: '⬜',
+  guitar: '🎸',
+  bass: '🎸',
+  wind_trumpet: '🎺',
+  wind_saxophone: '🎷',
+  wind_flute: '🪈',
+  wind_trombone: '🎺',
+  percussion: '🪘',
   rectangle: '',
   circle: '',
   cable_xlr: '〰',
@@ -71,10 +58,11 @@ export function StageItemNode({
   onContextMenu,
   onDblClick
 }: StageItemNodeProps): JSX.Element {
-  const color = item.color ?? ITEM_COLORS[item.type]
+  const color = item.color
+  const effectiveStroke = isSelected ? '#ffffff' : (color ?? '#666666')
   const { width, height } = item
   const isShape = item.type === 'rectangle' || item.type === 'circle'
-  const isCircular = item.type === 'microphone' || item.type === 'person' || item.type === 'circle'
+  const isCircular = item.type === 'circle'
   const iconFontSize = Math.min(width, height) * 0.45
 
   function handleContextMenu(e: Konva.KonvaEventObject<PointerEvent>): void {
@@ -101,13 +89,13 @@ export function StageItemNode({
           x={width / 2}
           y={height / 2}
           radius={Math.min(width, height) / 2}
-          fill={isShape ? 'transparent' : color}
-          opacity={isShape ? 1 : 0.85}
-          shadowBlur={isSelected ? 14 : isShape ? 0 : 6}
-          shadowColor={isSelected ? '#ffffff' : color}
+          fill={isShape ? 'transparent' : (color ?? 'transparent')}
+          opacity={isShape ? 1 : (color ? 0.85 : 1)}
+          shadowBlur={isSelected ? 14 : isShape ? 0 : (color ? 6 : 0)}
+          shadowColor={isSelected ? '#ffffff' : (color ?? 'transparent')}
           shadowOpacity={isSelected ? 0.5 : 0.35}
-          stroke={isSelected ? '#ffffff' : color}
-          strokeWidth={isShape ? (isSelected ? 3 : 2.5) : isSelected ? 2.5 : 0}
+          stroke={effectiveStroke}
+          strokeWidth={isShape ? (isSelected ? 3 : 2.5) : isSelected ? 2.5 : (color ? 0 : 1.5)}
           hitFunc={
             isShape
               ? (ctx, shape) => {
@@ -135,14 +123,14 @@ export function StageItemNode({
         <Rect
           width={width}
           height={height}
-          fill={isShape ? 'transparent' : color}
-          opacity={isShape ? 1 : 0.85}
+          fill={isShape ? 'transparent' : (color ?? 'transparent')}
+          opacity={isShape ? 1 : (color ? 0.85 : 1)}
           cornerRadius={isShape ? 4 : 6}
-          shadowBlur={isSelected ? 14 : isShape ? 0 : 6}
-          shadowColor={isSelected ? '#ffffff' : color}
+          shadowBlur={isSelected ? 14 : isShape ? 0 : (color ? 6 : 0)}
+          shadowColor={isSelected ? '#ffffff' : (color ?? 'transparent')}
           shadowOpacity={isSelected ? 0.5 : 0.35}
-          stroke={isSelected ? '#ffffff' : color}
-          strokeWidth={isShape ? (isSelected ? 3 : 2.5) : isSelected ? 2.5 : 0}
+          stroke={effectiveStroke}
+          strokeWidth={isShape ? (isSelected ? 3 : 2.5) : isSelected ? 2.5 : (color ? 0 : 1.5)}
           hitFunc={
             isShape
               ? (ctx, shape) => {
