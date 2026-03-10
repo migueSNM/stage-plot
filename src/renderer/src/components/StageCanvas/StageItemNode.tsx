@@ -1,9 +1,11 @@
-import { Group, Rect, Circle, Text } from 'react-konva'
+import { Group, Rect, Circle, Text, Path } from 'react-konva'
 import type Konva from 'konva'
 import type { StageItem, StageItemType } from '../../../../shared/types'
+import { ICON_PATHS } from '../../assets/icons/iconPaths'
 
 export const LABEL_HEIGHT = 22
 
+// Fallback for any type not covered by ICON_PATHS (e.g. cable types not on canvas)
 export const ITEM_ICONS: Record<StageItemType, string> = {
   microphone: '🎙',
   monitor: '📢',
@@ -23,12 +25,13 @@ export const ITEM_ICONS: Record<StageItemType, string> = {
   percussion: '🪘',
   rectangle: '',
   circle: '',
-  cable_xlr: '〰',
-  cable_trs: '〰',
-  cable_ts: '〰',
-  cable_midi: '〰',
-  cable_speakon: '〰',
-  text: ''
+  cable_xlr: '',
+  cable_trs: '',
+  cable_ts: '',
+  cable_midi: '',
+  cable_speakon: '',
+  text: '',
+  custom: ''
 }
 
 interface StageItemNodeProps {
@@ -63,6 +66,21 @@ export function StageItemNode({
   const { width, height } = item
   const isShape = item.type === 'rectangle' || item.type === 'circle'
   const isCircular = item.type === 'circle'
+  const isCustom = item.type === 'custom'
+
+  // SVG path data for this item type (if available)
+  const pathData = ICON_PATHS[item.type]
+
+  // For custom items the emoji is stored in extra.emoji
+  const customEmoji = isCustom ? ((item.extra?.emoji as string) ?? '⭐') : undefined
+
+  // Scale the 24×24 icon path to ~65 % of the item's smaller dimension
+  const iconSize = Math.min(width, height) * 0.65
+  const iconScale = iconSize / 24
+  const iconOffsetX = (width - 24 * iconScale) / 2
+  const iconOffsetY = (height / 2) - (24 * iconScale) / 2 - 2
+
+  // Font size for emoji fallback (custom items)
   const iconFontSize = Math.min(width, height) * 0.45
 
   function handleContextMenu(e: Konva.KonvaEventObject<PointerEvent>): void {
@@ -112,7 +130,6 @@ export function StageItemNode({
                     ctx.arc(cx, cy, innerR, 0, Math.PI * 2, true)
                     ctx.closePath()
                   }
-                  // Label zone below the circle (nonzero winding: clockwise = filled)
                   ctx.rect(-12, height + 4, width + 24, LABEL_HEIGHT)
                   ctx.fillShape(shape)
                 }
@@ -140,14 +157,12 @@ export function StageItemNode({
                   ctx.beginPath()
                   ctx.rect(0, 0, width, height)
                   if (innerW > 0 && innerH > 0) {
-                    // Counterclockwise inner rect creates a hole via nonzero winding rule
                     ctx.moveTo(hw, hw)
                     ctx.lineTo(hw, hw + innerH)
                     ctx.lineTo(hw + innerW, hw + innerH)
                     ctx.lineTo(hw + innerW, hw)
                     ctx.closePath()
                   }
-                  // Label zone below the shape (clockwise = filled, outside the hole)
                   ctx.rect(-12, height + 4, width + 24, LABEL_HEIGHT)
                   ctx.fillShape(shape)
                 }
@@ -156,14 +171,31 @@ export function StageItemNode({
         />
       )}
 
-      {!isShape && (
+      {/* Icon: SVG path for built-in types, emoji text for custom */}
+      {!isShape && isCustom && (
         <Text
           x={0}
           y={height / 2 - iconFontSize / 2 - 2}
           width={width}
-          text={ITEM_ICONS[item.type]}
+          text={customEmoji}
           fontSize={iconFontSize}
           align="center"
+          listening={false}
+        />
+      )}
+      {!isShape && !isCustom && pathData && (
+        <Path
+          x={iconOffsetX}
+          y={iconOffsetY}
+          data={pathData}
+          scaleX={iconScale}
+          scaleY={iconScale}
+          fill="none"
+          stroke={color ? 'rgba(255,255,255,0.9)' : '#999999'}
+          strokeWidth={2 / iconScale}
+          strokeScaleEnabled={false}
+          lineCap="round"
+          lineJoin="round"
           listening={false}
         />
       )}

@@ -53,7 +53,21 @@ const es = {
     cableMidi: 'MIDI',
     cableSpeakon: 'Speakon',
     annotations: 'Anotaciones',
-    text: 'Texto'
+    text: 'Texto',
+    custom: 'Personalizados',
+    customAdd: 'Agregar elemento personalizado…',
+    customNew: 'Nuevo Elemento Personalizado',
+    customEdit: 'Editar Elemento Personalizado',
+    customName: 'Nombre',
+    customNamePlaceholder: 'ej. Bajo, Cabina vocal…',
+    customEmoji: 'Ícono',
+    customColor: 'Color Predeterminado',
+    customColorNone: 'Sin color',
+    customColorReset: 'Restablecer',
+    customSave: 'Guardar',
+    customCancel: 'Cancelar',
+    customEditTitle: 'Editar',
+    customDeleteTitle: 'Eliminar'
   },
   canvas: {
     frontOfStage: 'FRENTE DEL ESCENARIO',

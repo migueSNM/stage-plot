@@ -35,6 +35,7 @@ export type StageItemType =
   | 'cable_midi'
   | 'cable_speakon'
   | 'text'
+  | 'custom'
 
 export interface StageItem {
   id: string
