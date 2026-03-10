@@ -1120,7 +1120,18 @@ export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
             </>
           )}
           {selectedIds.length === 1 && contextMenuItem && isCableType(contextMenuItem.type) && (
-            <div className="h-px bg-border mx-2 my-1" />
+            <>
+              <button
+                className="w-full text-left px-4 py-2 text-sm hover:bg-surface-2 transition-colors flex items-center gap-2"
+                onClick={() => {
+                  setColorPickerFor(contextMenu.itemId)
+                  setContextMenu(null)
+                }}
+              >
+                🎨 {t('contextMenu.changeColor')}
+              </button>
+              <div className="h-px bg-border mx-2 my-1" />
+            </>
           )}
           <button
             className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-surface-2 transition-colors flex items-center gap-2"

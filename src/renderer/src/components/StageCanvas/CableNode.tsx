@@ -1,14 +1,25 @@
 import { useState } from 'react'
-import { Group, Line, Circle } from 'react-konva'
+import { Group, Line, Circle, Text } from 'react-konva'
 import type Konva from 'konva'
 import type { StageItem } from '../../../../shared/types'
 
+export const CABLE_DEFAULT_COLOR = '#cccccc'
+
+/** All cables default to the same neutral color — users set custom colors via the color picker */
 export const CABLE_COLORS: Record<string, string> = {
-  cable_xlr: '#4a90e2',
-  cable_trs: '#7ed321',
-  cable_ts: '#f5a623',
-  cable_midi: '#9b59b6',
-  cable_speakon: '#f1c40f'
+  cable_xlr: CABLE_DEFAULT_COLOR,
+  cable_trs: CABLE_DEFAULT_COLOR,
+  cable_ts: CABLE_DEFAULT_COLOR,
+  cable_midi: CABLE_DEFAULT_COLOR,
+  cable_speakon: CABLE_DEFAULT_COLOR
+}
+
+const CABLE_LABELS: Record<string, string> = {
+  cable_xlr: 'XLR',
+  cable_trs: 'TRS',
+  cable_ts: 'TS',
+  cable_midi: 'MIDI',
+  cable_speakon: 'Speakon'
 }
 
 export type PortSide = 'top' | 'right' | 'bottom' | 'left'
@@ -173,7 +184,7 @@ export function CableNode({
   onEndpointDragEnd,
   onEndpointDragMove
 }: CableNodeProps): JSX.Element {
-  const color = item.color ?? CABLE_COLORS[item.type] ?? '#4a90e2'
+  const color = item.color ?? CABLE_COLORS[item.type] ?? CABLE_DEFAULT_COLOR
 
   const ex = (item.extra ?? {}) as {
     fromSide?: PortSide | null
@@ -206,6 +217,26 @@ export function CableNode({
     onContextMenu(e.evt.clientX, e.evt.clientY)
   }
 
+  const labelText = CABLE_LABELS[item.type] ?? item.type
+
+  // Effective endpoint positions account for live drags and body-drag delta
+  const effectiveFromX = liveFrom?.x ?? circleFromX
+  const effectiveFromY = liveFrom?.y ?? circleFromY
+  const effectiveToX = liveTo?.x ?? circleToX
+  const effectiveToY = liveTo?.y ?? circleToY
+
+  // Determine label orientation from overall cable direction
+  const cableDx = effectiveToX - effectiveFromX
+  const cableDy = effectiveToY - effectiveFromY
+  const isMoreVertical = Math.abs(cableDy) > Math.abs(cableDx)
+
+  const midX = (effectiveFromX + effectiveToX) / 2
+  const midY = (effectiveFromY + effectiveToY) / 2
+
+  // Label fits in a 60px wide text box, offset 10px away from the cable
+  const LABEL_BOX = 60
+  const LABEL_GAP = 10
+
   return (
     <Group>
       {/* Cable line — Konva translates this node during body drag */}
@@ -236,6 +267,33 @@ export function CableNode({
           onBodyDragEnd(dx, dy)
         }}
       />
+
+      {/* Cable type label — horizontal below midpoint, or rotated beside for vertical cables */}
+      {isMoreVertical ? (
+        <Text
+          x={midX + LABEL_GAP}
+          y={midY}
+          width={LABEL_BOX}
+          text={labelText}
+          fontSize={10}
+          fill={color}
+          align="center"
+          offsetX={LABEL_BOX / 2}
+          rotation={-90}
+          listening={false}
+        />
+      ) : (
+        <Text
+          x={midX - LABEL_BOX / 2}
+          y={midY + LABEL_GAP}
+          width={LABEL_BOX}
+          text={labelText}
+          fontSize={10}
+          fill={color}
+          align="center"
+          listening={false}
+        />
+      )}
 
       {/* Endpoint handles — visible when selected */}
       {isSelected && (
