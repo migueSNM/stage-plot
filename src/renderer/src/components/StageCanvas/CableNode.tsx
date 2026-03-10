@@ -161,6 +161,37 @@ function getRoutedPoints(
   return pts
 }
 
+/**
+ * From a flat Konva points array [x0,y0, x1,y1, ...] find the longest segment
+ * and return its midpoint + whether it is more vertical than horizontal.
+ */
+function longestSegmentInfo(pts: number[]): {
+  midX: number
+  midY: number
+  isVertical: boolean
+} {
+  let bestLen = -1
+  let bestMidX = pts[0] ?? 0
+  let bestMidY = pts[1] ?? 0
+  let bestVertical = false
+
+  for (let i = 0; i < pts.length - 2; i += 2) {
+    const ax = pts[i],  ay = pts[i + 1]
+    const bx = pts[i + 2], by = pts[i + 3]
+    const dx = bx - ax
+    const dy = by - ay
+    const len = Math.sqrt(dx * dx + dy * dy)
+    if (len > bestLen) {
+      bestLen = len
+      bestMidX = (ax + bx) / 2
+      bestMidY = (ay + by) / 2
+      bestVertical = Math.abs(dy) > Math.abs(dx)
+    }
+  }
+
+  return { midX: bestMidX, midY: bestMidY, isVertical: bestVertical }
+}
+
 interface CableNodeProps {
   item: StageItem
   fromPos: { x: number; y: number }
@@ -219,19 +250,18 @@ export function CableNode({
 
   const labelText = CABLE_LABELS[item.type] ?? item.type
 
-  // Effective endpoint positions account for live drags and body-drag delta
-  const effectiveFromX = liveFrom?.x ?? circleFromX
-  const effectiveFromY = liveFrom?.y ?? circleFromY
-  const effectiveToX = liveTo?.x ?? circleToX
-  const effectiveToY = liveTo?.y ?? circleToY
+  // During body drag the Line node itself translates — recompute routed points
+  // from the shifted positions so the label tracks the visual cable.
+  const labelLinePoints = bodyDelta
+    ? getRoutedPoints(
+        { x: fromPos.x + bodyDelta.dx, y: fromPos.y + bodyDelta.dy },
+        fromSide,
+        { x: toPos.x + bodyDelta.dx, y: toPos.y + bodyDelta.dy },
+        toSide
+      )
+    : linePoints // already accounts for liveFrom / liveTo
 
-  // Determine label orientation from overall cable direction
-  const cableDx = effectiveToX - effectiveFromX
-  const cableDy = effectiveToY - effectiveFromY
-  const isMoreVertical = Math.abs(cableDy) > Math.abs(cableDx)
-
-  const midX = (effectiveFromX + effectiveToX) / 2
-  const midY = (effectiveFromY + effectiveToY) / 2
+  const { midX, midY, isVertical: isMoreVertical } = longestSegmentInfo(labelLinePoints)
 
   // Label fits in a 60px wide text box, offset 10px away from the cable
   const LABEL_BOX = 60
