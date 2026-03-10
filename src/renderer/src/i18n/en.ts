@@ -53,7 +53,21 @@ const en = {
     cableMidi: 'MIDI',
     cableSpeakon: 'Speakon',
     annotations: 'Annotations',
-    text: 'Text'
+    text: 'Text',
+    custom: 'Custom',
+    customAdd: 'Add custom item…',
+    customNew: 'New Custom Item',
+    customEdit: 'Edit Custom Item',
+    customName: 'Name',
+    customNamePlaceholder: 'e.g. Bass Rig, Vocal Booth…',
+    customEmoji: 'Icon',
+    customColor: 'Default Color',
+    customColorNone: 'No color',
+    customColorReset: 'Reset',
+    customSave: 'Save',
+    customCancel: 'Cancel',
+    customEditTitle: 'Edit',
+    customDeleteTitle: 'Delete'
   },
   canvas: {
     frontOfStage: 'FRONT OF STAGE',
