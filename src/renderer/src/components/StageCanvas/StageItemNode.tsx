@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Group, Rect, Circle, Text, Path } from 'react-konva'
 import type Konva from 'konva'
 import type { StageItem, StageItemType } from '../../../../shared/types'
@@ -61,12 +62,18 @@ export function StageItemNode({
   onContextMenu,
   onDblClick
 }: StageItemNodeProps): JSX.Element {
+  const [isHovered, setIsHovered] = useState(false)
   const color = item.color
-  const effectiveStroke = isSelected ? '#ffffff' : (color ?? '#666666')
   const { width, height } = item
   const isShape = item.type === 'rectangle' || item.type === 'circle'
   const isCircular = item.type === 'circle'
   const isCustom = item.type === 'custom'
+  const showHover = isHovered && !isSelected
+  const effectiveStroke = isSelected
+    ? '#ffffff'
+    : showHover && !isShape
+      ? 'rgba(255,255,255,0.5)'
+      : (color ?? '#666666')
 
   // SVG path data for this item type (if available)
   const pathData = ICON_PATHS[item.type]
@@ -101,6 +108,8 @@ export function StageItemNode({
       onDragEnd={onDragEnd}
       onDragMove={onDragMove}
       onDragStart={onDragStart}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
       {isCircular ? (
         <Circle
@@ -109,11 +118,11 @@ export function StageItemNode({
           radius={Math.min(width, height) / 2}
           fill={isShape ? 'transparent' : (color ?? 'transparent')}
           opacity={isShape ? 1 : (color ? 0.85 : 1)}
-          shadowBlur={isSelected ? 14 : isShape ? 0 : (color ? 6 : 0)}
-          shadowColor={isSelected ? '#ffffff' : (color ?? 'transparent')}
-          shadowOpacity={isSelected ? 0.5 : 0.35}
+          shadowBlur={isSelected ? 14 : showHover ? (isShape ? 5 : 8) : isShape ? 0 : (color ? 6 : 0)}
+          shadowColor={isSelected ? '#ffffff' : showHover ? '#ffffff' : (color ?? 'transparent')}
+          shadowOpacity={isSelected ? 0.5 : showHover ? 0.35 : 0.35}
           stroke={effectiveStroke}
-          strokeWidth={isShape ? (isSelected ? 3 : 2.5) : isSelected ? 2.5 : (color ? 0 : 1.5)}
+          strokeWidth={isShape ? (isSelected ? 3 : 2.5) : isSelected ? 2.5 : (showHover || !color) ? 1.5 : 0}
           hitFunc={
             isShape
               ? (ctx, shape) => {
@@ -143,11 +152,11 @@ export function StageItemNode({
           fill={isShape ? 'transparent' : (color ?? 'transparent')}
           opacity={isShape ? 1 : (color ? 0.85 : 1)}
           cornerRadius={isShape ? 4 : 6}
-          shadowBlur={isSelected ? 14 : isShape ? 0 : (color ? 6 : 0)}
-          shadowColor={isSelected ? '#ffffff' : (color ?? 'transparent')}
-          shadowOpacity={isSelected ? 0.5 : 0.35}
+          shadowBlur={isSelected ? 14 : showHover ? (isShape ? 5 : 8) : isShape ? 0 : (color ? 6 : 0)}
+          shadowColor={isSelected ? '#ffffff' : showHover ? '#ffffff' : (color ?? 'transparent')}
+          shadowOpacity={isSelected ? 0.5 : showHover ? 0.35 : 0.35}
           stroke={effectiveStroke}
-          strokeWidth={isShape ? (isSelected ? 3 : 2.5) : isSelected ? 2.5 : (color ? 0 : 1.5)}
+          strokeWidth={isShape ? (isSelected ? 3 : 2.5) : isSelected ? 2.5 : (showHover || !color) ? 1.5 : 0}
           hitFunc={
             isShape
               ? (ctx, shape) => {

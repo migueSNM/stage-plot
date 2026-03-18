@@ -28,7 +28,13 @@ const api = {
   },
   files: {
     exportJson: (data: StagePlotExportData) => invoke('file:exportJson', data),
-    importJson: () => invoke('file:importJson')
+    importJson: () => invoke('file:importJson'),
+    importImage: () => invoke('file:importImage')
+  },
+  background: {
+    get: (projectId: string) => invoke('db:background:get', projectId),
+    set: (projectId: string, imageData: string | null, locked: boolean, x: number | null, y: number | null, width: number | null, height: number | null) =>
+      invoke('db:background:set', projectId, imageData, locked, x, y, width, height)
   },
   app: {
     getVersion: () => invoke('app:version'),

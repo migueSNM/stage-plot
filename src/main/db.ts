@@ -44,7 +44,19 @@ function migrate(db: Database.Database): void {
       extra TEXT,
       sort_order INTEGER NOT NULL DEFAULT 0
     );
+
+    CREATE TABLE IF NOT EXISTS project_backgrounds (
+      project_id TEXT PRIMARY KEY REFERENCES projects(id) ON DELETE CASCADE,
+      image_data TEXT,
+      locked INTEGER NOT NULL DEFAULT 0
+    );
   `)
+
+  // Safe additive migrations for existing tables
+  try { db.exec('ALTER TABLE project_backgrounds ADD COLUMN x REAL') } catch {}
+  try { db.exec('ALTER TABLE project_backgrounds ADD COLUMN y REAL') } catch {}
+  try { db.exec('ALTER TABLE project_backgrounds ADD COLUMN width REAL') } catch {}
+  try { db.exec('ALTER TABLE project_backgrounds ADD COLUMN height REAL') } catch {}
 }
 
 export function registerDbHandlers(ipcMain: IpcMain): void {
@@ -133,4 +145,39 @@ export function registerDbHandlers(ipcMain: IpcMain): void {
   ipcMain.handle('db:items:deleteByProject', (_e, projectId: string) => {
     getDb().prepare('DELETE FROM stage_items WHERE project_id = ?').run(projectId)
   })
+
+  // Background image
+  ipcMain.handle('db:background:get', (_e, projectId: string) => {
+    const row = getDb()
+      .prepare('SELECT image_data, locked, x, y, width, height FROM project_backgrounds WHERE project_id = ?')
+      .get(projectId) as { image_data: string | null; locked: number; x: number | null; y: number | null; width: number | null; height: number | null } | undefined
+    if (!row) return { imageData: null, locked: false, x: null, y: null, width: null, height: null }
+    return {
+      imageData: row.image_data ?? null,
+      locked: !!row.locked,
+      x: row.x ?? null,
+      y: row.y ?? null,
+      width: row.width ?? null,
+      height: row.height ?? null
+    }
+  })
+
+  ipcMain.handle(
+    'db:background:set',
+    (_e, projectId: string, imageData: string | null, locked: boolean, x: number | null, y: number | null, width: number | null, height: number | null) => {
+      getDb()
+        .prepare(
+          `INSERT INTO project_backgrounds (project_id, image_data, locked, x, y, width, height)
+           VALUES (?, ?, ?, ?, ?, ?, ?)
+           ON CONFLICT(project_id) DO UPDATE SET
+             image_data = excluded.image_data,
+             locked = excluded.locked,
+             x = excluded.x,
+             y = excluded.y,
+             width = excluded.width,
+             height = excluded.height`
+        )
+        .run(projectId, imageData, locked ? 1 : 0, x, y, width, height)
+    }
+  )
 }
