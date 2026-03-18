@@ -29,7 +29,11 @@ export function Toolbar(): JSX.Element {
     redo,
     canvasScale,
     setCanvasScale,
-    setCanvasPos
+    setCanvasPos,
+    backgroundImage,
+    backgroundLocked,
+    setBackgroundImage,
+    setBackgroundLocked
   } = useProjectStore()
 
   const [showProjects, setShowProjects] = useState(false)
@@ -79,6 +83,12 @@ export function Toolbar(): JSX.Element {
     const data: StagePlotExportData = { version: 1, project: activeProject, items }
     await window.api.files.exportJson(data)
     setShowExport(false)
+  }
+
+  async function handleImportBackground(): Promise<void> {
+    setShowExport(false)
+    const dataUrl = await window.api.files.importImage()
+    if (dataUrl) await setBackgroundImage(dataUrl)
   }
 
   async function handleImportJson(): Promise<void> {
@@ -215,6 +225,41 @@ export function Toolbar(): JSX.Element {
                       📂 {t('toolbar.importJson')}
                     </button>
                     <div className="h-px bg-border mx-2 my-1" />
+                    <button
+                      className="w-full text-left px-4 py-2 text-xs hover:bg-surface-2
+                                 transition-colors flex items-center gap-2 disabled:opacity-40"
+                      onClick={handleImportBackground}
+                      disabled={backgroundLocked}
+                    >
+                      🖼 {t('toolbar.importBg')}
+                    </button>
+                    {backgroundImage && (
+                      <>
+                        <button
+                          className="w-full text-left px-4 py-2 text-xs hover:bg-surface-2
+                                     transition-colors flex items-center gap-2"
+                          onClick={() => {
+                            void setBackgroundLocked(!backgroundLocked)
+                            setShowExport(false)
+                          }}
+                        >
+                          {backgroundLocked ? '🔓' : '🔒'}{' '}
+                          {t(backgroundLocked ? 'toolbar.unlockBg' : 'toolbar.lockBg')}
+                        </button>
+                        <button
+                          className="w-full text-left px-4 py-2 text-xs hover:bg-surface-2
+                                     transition-colors flex items-center gap-2 disabled:opacity-40"
+                          onClick={() => {
+                            void setBackgroundImage(null)
+                            setShowExport(false)
+                          }}
+                          disabled={backgroundLocked}
+                        >
+                          ✕ {t('toolbar.removeBg')}
+                        </button>
+                      </>
+                    )}
+                  <div className="h-px bg-border mx-2 my-1" />
                     <button
                       className="w-full text-left px-4 py-2 text-xs hover:bg-surface-2
                                  transition-colors flex items-center gap-2"

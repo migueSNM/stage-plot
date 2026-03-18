@@ -14,7 +14,11 @@ const en = {
     theme: 'Theme',
     zoomIn: 'Zoom In',
     zoomOut: 'Zoom Out',
-    resetZoom: 'Reset Zoom'
+    resetZoom: 'Reset Zoom',
+    importBg: 'Import Background Image',
+    lockBg: 'Lock Background',
+    unlockBg: 'Unlock Background',
+    removeBg: 'Remove Background'
   },
   projects: {
     title: 'Projects',

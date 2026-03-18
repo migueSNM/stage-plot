@@ -14,7 +14,11 @@ const es = {
     theme: 'Tema',
     zoomIn: 'Acercar',
     zoomOut: 'Alejar',
-    resetZoom: 'Restablecer Zoom'
+    resetZoom: 'Restablecer Zoom',
+    importBg: 'Importar Imagen de Fondo',
+    lockBg: 'Bloquear Fondo',
+    unlockBg: 'Desbloquear Fondo',
+    removeBg: 'Eliminar Fondo'
   },
   projects: {
     title: 'Proyectos',

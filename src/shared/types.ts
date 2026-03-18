@@ -81,6 +81,9 @@ export interface IpcChannels {
   'db:items:deleteByProject': { args: [projectId: string]; return: void }
   'file:exportJson': { args: [data: StagePlotExportData]; return: boolean }
   'file:importJson': { args: []; return: StagePlotExportData | null }
+  'file:importImage': { args: []; return: string | null }
+  'db:background:get': { args: [projectId: string]; return: { imageData: string | null; locked: boolean; x: number | null; y: number | null; width: number | null; height: number | null } }
+  'db:background:set': { args: [projectId: string, imageData: string | null, locked: boolean, x: number | null, y: number | null, width: number | null, height: number | null]; return: void }
   'app:version': { args: []; return: string }
   'app:install-update': { args: []; return: void }
   'app:open-releases': { args: []; return: void }

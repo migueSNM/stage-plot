@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Group, Rect, Text } from 'react-konva'
 import type Konva from 'konva'
 import type { StageItem } from '../../../../shared/types'
@@ -27,6 +28,7 @@ export function TextNode({
   onContextMenu,
   onDblClick
 }: TextNodeProps): JSX.Element {
+  const [isHovered, setIsHovered] = useState(false)
   const extra = (item.extra as { fontSize?: number; fontStyle?: string } | null) ?? {}
   const fontSize = extra.fontSize ?? 16
   const fontStyle = extra.fontStyle ?? 'normal'
@@ -50,6 +52,8 @@ export function TextNode({
       onDragEnd={onDragEnd}
       onDragMove={onDragMove}
       onDragStart={onDragStart}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
       {isSelected && (
         <Rect
@@ -61,6 +65,19 @@ export function TextNode({
           strokeWidth={1.5}
           dash={[4, 3]}
           fill="transparent"
+        />
+      )}
+      {isHovered && !isSelected && (
+        <Rect
+          x={-4}
+          y={-4}
+          width={item.width + 8}
+          height={item.height + 8}
+          stroke="rgba(255,255,255,0.25)"
+          strokeWidth={1}
+          dash={[4, 3]}
+          fill="transparent"
+          listening={false}
         />
       )}
       <Text

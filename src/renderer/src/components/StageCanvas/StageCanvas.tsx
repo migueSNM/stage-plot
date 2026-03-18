@@ -1,5 +1,5 @@
-import { useRef, useCallback, useEffect, useState } from 'react'
-import { Stage, Layer, Rect, Text, Transformer, Circle } from 'react-konva'
+import { useRef, useCallback, useEffect, useLayoutEffect, useState } from 'react'
+import { Stage, Layer, Rect, Text, Transformer, Circle, Image as KonvaImage } from 'react-konva'
 import type Konva from 'konva'
 import { jsPDF } from 'jspdf'
 import { useTranslation } from 'react-i18next'
@@ -86,8 +86,49 @@ export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
     canvasScale,
     canvasPos,
     setCanvasScale,
-    setCanvasPos
+    setCanvasPos,
+    backgroundImage,
+    backgroundLocked,
+    backgroundX,
+    backgroundY,
+    backgroundWidth,
+    backgroundHeight
   } = useProjectStore()
+
+  // Background image as HTMLImageElement for Konva
+  const [bgHtmlImg, setBgHtmlImg] = useState<HTMLImageElement | null>(null)
+  const [backgroundSelected, setBackgroundSelected] = useState(false)
+  const backgroundSelectedRef = useRef(false)
+  const bgImageRef = useRef<Konva.Image | null>(null)
+  // Flag: set in handleTransformEnd so useLayoutEffect can call forceUpdate after commit
+  const pendingTransformerUpdateRef = useRef(false)
+
+  // Keep backgroundSelectedRef in sync
+  backgroundSelectedRef.current = backgroundSelected
+
+  useEffect(() => {
+    if (!backgroundImage) {
+      setBgHtmlImg(null)
+      return
+    }
+    const img = new window.Image()
+    img.onload = () => {
+      setBgHtmlImg(img)
+      const { backgroundX } = useProjectStore.getState()
+      if (backgroundX === null) {
+        const scale = Math.min(width / img.naturalWidth, height / img.naturalHeight)
+        const bgW = img.naturalWidth * scale
+        const bgH = img.naturalHeight * scale
+        useProjectStore.getState().setBackgroundTransform(
+          (width - bgW) / 2,
+          (height - bgH) / 2,
+          bgW,
+          bgH
+        )
+      }
+    }
+    img.src = backgroundImage
+  }, [backgroundImage, width, height])
 
   // Tracks whether an arrow key is currently held so we only push one undo entry
   const arrowHeldRef = useRef(false)
@@ -136,6 +177,11 @@ export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
   useEffect(() => {
     const tr = trRef.current
     if (!tr) return
+    if (backgroundSelected && bgImageRef.current && !backgroundLocked) {
+      tr.nodes([bgImageRef.current])
+      tr.getLayer()?.batchDraw()
+      return
+    }
     const nodes = selectedIds
       .filter((id) => {
         const item = items.find((i) => i.id === id)
@@ -145,7 +191,19 @@ export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
       .filter((n): n is Konva.Group => !!n)
     tr.nodes(nodes)
     tr.getLayer()?.batchDraw()
-  }, [selectedIds, items])
+  }, [selectedIds, items, backgroundSelected, backgroundLocked])
+
+  // ── Force Transformer refresh after dimensions change (post-commit) ────────
+  // useLayoutEffect with no deps runs synchronously after every commit.
+  // handleTransformEnd sets pendingTransformerUpdateRef before updating state,
+  // so by the time this runs, Konva nodes already have the new dimensions.
+  useLayoutEffect(() => {
+    if (pendingTransformerUpdateRef.current) {
+      pendingTransformerUpdateRef.current = false
+      trRef.current?.forceUpdate()
+      trRef.current?.getLayer()?.batchDraw()
+    }
+  })
 
   // ── Export ────────────────────────────────────────────────────────────────
 
@@ -265,6 +323,7 @@ export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
 
       if (e.key === 'Escape') {
         setSelectedIds([])
+        setBackgroundSelected(false)
         setContextMenu(null)
         setColorPickerFor(null)
         return
@@ -444,6 +503,23 @@ export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
 
   // Read latest values from store to avoid stale closures
   function handleTransformEnd(): void {
+    if (backgroundSelectedRef.current && bgImageRef.current) {
+      const node = bgImageRef.current
+      const newW = Math.max(20, node.width() * node.scaleX())
+      const newH = Math.max(20, node.height() * node.scaleY())
+      // Reset scale and bake into dimensions imperatively so forceUpdate sees correct size
+      node.scaleX(1)
+      node.scaleY(1)
+      node.width(newW)
+      node.height(newH)
+      // Synchronous forceUpdate: node dims are already correct at this point
+      trRef.current?.forceUpdate()
+      trRef.current?.getLayer()?.batchDraw()
+      // Persist to store (synchronous state update + fire-and-forget DB)
+      useProjectStore.getState().setBackgroundTransform(node.x(), node.y(), newW, newH)
+      return
+    }
+
     const { items: latest } = useProjectStore.getState()
     const ids = selectedIdsRef.current
     const updatedItems: StageItem[] = []
@@ -452,7 +528,7 @@ export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
       const node = nodeRefs.current.get(id)
       if (!node) continue
       const item = latest.find((i) => i.id === id)
-      if (!item) return
+      if (!item) continue
 
       const isShape =
         item.type === 'rectangle' || item.type === 'circle' || item.type === 'text'
@@ -475,6 +551,9 @@ export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
     }
 
     if (updatedItems.length > 0) {
+      // Mark for post-commit forceUpdate (useLayoutEffect will pick this up after React
+      // re-renders the item nodes with new dimensions)
+      pendingTransformerUpdateRef.current = true
       useProjectStore.getState().pushHistory()
       window.api.items.saveMany(updatedItems)
       useProjectStore.setState((s) => ({
@@ -491,6 +570,7 @@ export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
     }
     if (e.target === e.target.getStage()) {
       setSelectedIds([])
+      setBackgroundSelected(false)
       setContextMenu(null)
       setColorPickerFor(null)
     }
@@ -879,6 +959,35 @@ export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
 
         {/* Items + Transformer */}
         <Layer>
+          {/* Background image — rendered below everything, interactive when unlocked */}
+          {bgHtmlImg && backgroundWidth && backgroundHeight && (
+            <KonvaImage
+              ref={(node) => { bgImageRef.current = node }}
+              image={bgHtmlImg}
+              x={backgroundX ?? 0}
+              y={backgroundY ?? 0}
+              width={backgroundWidth}
+              height={backgroundHeight}
+              opacity={backgroundLocked ? 0.55 : 0.7}
+              draggable={!backgroundLocked}
+              listening={!backgroundLocked}
+              onClick={(e) => {
+                e.cancelBubble = true
+                setBackgroundSelected(true)
+                setSelectedIds([])
+                setContextMenu(null)
+              }}
+              onDragEnd={(e) => {
+                useProjectStore.getState().setBackgroundTransform(
+                  e.target.x(),
+                  e.target.y(),
+                  backgroundWidth,
+                  backgroundHeight
+                )
+              }}
+            />
+          )}
+
           {/* Cables rendered first so instruments appear on top */}
           {items
             .filter((item) => CABLE_TYPES.has(item.type))
@@ -892,6 +1001,7 @@ export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
                   toPos={toPos}
                   isSelected={selectedIds.includes(cable.id)}
                   onSelect={(e) => {
+                    setBackgroundSelected(false)
                     if (e.evt.shiftKey) {
                       setSelectedIds((prev) =>
                         prev.includes(cable.id)
@@ -947,6 +1057,7 @@ export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
                       else nodeRefs.current.delete(item.id)
                     }}
                     onSelect={(e) => {
+                      setBackgroundSelected(false)
                       if (e.evt.shiftKey) {
                         setSelectedIds((prev) =>
                           prev.includes(item.id)
@@ -984,6 +1095,7 @@ export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
                     else nodeRefs.current.delete(item.id)
                   }}
                   onSelect={(e) => {
+                    setBackgroundSelected(false)
                     if (e.evt.shiftKey) {
                       setSelectedIds((prev) =>
                         prev.includes(item.id)
@@ -1027,8 +1139,8 @@ export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
 
           <Transformer
             ref={trRef}
-            resizeEnabled={isSelectedShape}
-            keepRatio={singleSelected?.type === 'circle'}
+            resizeEnabled={isSelectedShape || backgroundSelected}
+            keepRatio={singleSelected?.type === 'circle' || backgroundSelected}
             rotateEnabled={true}
             rotationSnaps={[0, 90, 180, 270]}
             rotationSnapTolerance={10}

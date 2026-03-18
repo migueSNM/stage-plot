@@ -224,6 +224,8 @@ export function CableNode({
   const fromSide = ex.fromSide ?? null
   const toSide   = ex.toSide   ?? null
 
+  const [isHovered, setIsHovered] = useState(false)
+
   // Live endpoint positions during endpoint-circle drag (real-time line update)
   const [liveFrom, setLiveFrom] = useState<{ x: number; y: number } | null>(null)
   const [liveTo,   setLiveTo]   = useState<{ x: number; y: number } | null>(null)
@@ -273,15 +275,17 @@ export function CableNode({
       <Line
         points={linePoints}
         stroke={color}
-        strokeWidth={isSelected ? 3 : 2}
+        strokeWidth={isSelected ? 3 : isHovered ? 2.5 : 2}
         hitStrokeWidth={12}
         lineJoin="round"
         shadowColor={color}
-        shadowBlur={isSelected ? 8 : 3}
-        shadowOpacity={isSelected ? 0.5 : 0.2}
+        shadowBlur={isSelected ? 8 : isHovered ? 5 : 3}
+        shadowOpacity={isSelected ? 0.5 : isHovered ? 0.35 : 0.2}
         draggable
         onClick={(e) => onSelect(e as unknown as Konva.KonvaEventObject<MouseEvent>)}
         onContextMenu={handleContextMenu}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
         onDragStart={(e) => {
           onSelect(e as unknown as Konva.KonvaEventObject<MouseEvent>)
         }}

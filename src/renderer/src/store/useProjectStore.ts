@@ -30,6 +30,14 @@ interface ProjectStore {
   canvasPos: { x: number; y: number }
   clipboard: StageItem[]
 
+  // Background image
+  backgroundImage: string | null
+  backgroundLocked: boolean
+  backgroundX: number | null
+  backgroundY: number | null
+  backgroundWidth: number | null
+  backgroundHeight: number | null
+
   registerExport: (fns: ExportFns) => void
 
   // History
@@ -49,6 +57,12 @@ interface ProjectStore {
   // Canvas view actions
   setCanvasScale: (scale: number) => void
   setCanvasPos: (pos: { x: number; y: number }) => void
+
+  // Background actions
+  loadBackground: (projectId: string) => Promise<void>
+  setBackgroundImage: (imageData: string | null) => Promise<void>
+  setBackgroundLocked: (locked: boolean) => Promise<void>
+  setBackgroundTransform: (x: number, y: number, width: number, height: number) => void
 
   // Clipboard actions
   copySelected: (ids: string[]) => void
@@ -84,6 +98,12 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   canvasScale: 1.0,
   canvasPos: { x: 0, y: 0 },
   clipboard: [],
+  backgroundImage: null,
+  backgroundLocked: false,
+  backgroundX: null,
+  backgroundY: null,
+  backgroundWidth: null,
+  backgroundHeight: null,
 
   registerExport: (fns) => set({ exportFns: fns }),
 
@@ -91,6 +111,45 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
 
   setCanvasScale: (scale) => set({ canvasScale: scale }),
   setCanvasPos: (pos) => set({ canvasPos: pos }),
+
+  // ── Background ─────────────────────────────────────────────────────────────
+
+  loadBackground: async (projectId) => {
+    const result = await window.api.background.get(projectId)
+    set({
+      backgroundImage: result.imageData,
+      backgroundLocked: result.locked,
+      backgroundX: result.x,
+      backgroundY: result.y,
+      backgroundWidth: result.width,
+      backgroundHeight: result.height
+    })
+  },
+
+  setBackgroundImage: async (imageData) => {
+    const { activeProject, backgroundLocked } = get()
+    if (!activeProject) return
+    await window.api.background.set(activeProject.id, imageData, backgroundLocked, null, null, null, null)
+    set({ backgroundImage: imageData, backgroundX: null, backgroundY: null, backgroundWidth: null, backgroundHeight: null })
+  },
+
+  setBackgroundLocked: async (locked) => {
+    const { activeProject, backgroundImage, backgroundX, backgroundY, backgroundWidth, backgroundHeight } = get()
+    if (!activeProject) return
+    await window.api.background.set(activeProject.id, backgroundImage, locked, backgroundX, backgroundY, backgroundWidth, backgroundHeight)
+    set({ backgroundLocked: locked })
+  },
+
+  setBackgroundTransform: (x, y, width, height) => {
+    const { activeProject, backgroundImage, backgroundLocked } = get()
+    if (!activeProject) return
+    // Optimistic: update state immediately so React re-renders with correct dims
+    set({ backgroundX: x, backgroundY: y, backgroundWidth: width, backgroundHeight: height })
+    // Fire-and-forget DB persist
+    window.api.background
+      .set(activeProject.id, backgroundImage, backgroundLocked, x, y, width, height)
+      .catch(console.error)
+  },
 
   // ── Clipboard ─────────────────────────────────────────────────────────────
 
@@ -177,8 +236,22 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   openProject: async (id) => {
     const project = await window.api.projects.get(id)
     if (!project) return
-    const items = await window.api.items.list(id)
-    set({ activeProject: project, items, undoStack: [], redoStack: [] })
+    const [items, bg] = await Promise.all([
+      window.api.items.list(id),
+      window.api.background.get(id)
+    ])
+    set({
+      activeProject: project,
+      items,
+      undoStack: [],
+      redoStack: [],
+      backgroundImage: bg.imageData,
+      backgroundLocked: bg.locked,
+      backgroundX: bg.x,
+      backgroundY: bg.y,
+      backgroundWidth: bg.width,
+      backgroundHeight: bg.height
+    })
   },
 
   createProject: async (name, description = '') => {
@@ -215,7 +288,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   },
 
   closeProject: () => {
-    set({ activeProject: null, items: [], undoStack: [], redoStack: [] })
+    set({ activeProject: null, items: [], undoStack: [], redoStack: [], backgroundImage: null, backgroundLocked: false, backgroundX: null, backgroundY: null, backgroundWidth: null, backgroundHeight: null })
   },
 
   importProject: async (data) => {

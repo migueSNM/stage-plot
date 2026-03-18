@@ -43,4 +43,22 @@ export function registerFileHandlers(
       return null
     }
   })
+
+  ipcMain.handle('file:importImage', async (_event) => {
+    const win = getMainWindow()
+    const result = await dialog.showOpenDialog(win ?? undefined!, {
+      title: 'Import Background Image',
+      filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg'] }],
+      properties: ['openFile']
+    })
+    if (result.canceled || !result.filePaths.length) return null
+    try {
+      const buffer = fs.readFileSync(result.filePaths[0])
+      const ext = result.filePaths[0].split('.').pop()?.toLowerCase() ?? 'png'
+      const mimeType = ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' : 'image/png'
+      return `data:${mimeType};base64,${buffer.toString('base64')}`
+    } catch {
+      return null
+    }
+  })
 }
