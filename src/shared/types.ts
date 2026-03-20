@@ -11,29 +11,70 @@ export interface Project {
 // ─── Stage Items ──────────────────────────────────────────────────────────────
 
 export type StageItemType =
-  | 'microphone'
-  | 'monitor'
-  | 'amp'
-  | 'keyboard'
-  | 'drums'
-  | 'di_box'
-  | 'speaker_main'
-  | 'person'
-  | 'generic'
+  // ── Legacy (kept for backward compat) ──────────────────────────────────────
   | 'guitar'
   | 'bass'
+  | 'amp'
+  | 'generic'
+  | 'percussion'
+  | 'rectangle'
+  | 'circle'
+  // ── People ─────────────────────────────────────────────────────────────────
+  | 'person'
+  // ── Guitars & Basses ───────────────────────────────────────────────────────
+  | 'guitar_acoustic'
+  | 'guitar_electric'
+  | 'guitar_classical'
+  | 'bass_electric'
+  | 'bass_upright'
+  // ── Amplifiers ─────────────────────────────────────────────────────────────
+  | 'amp_combo'
+  | 'amp_head'
+  | 'amp_cab'
+  | 'amp_bass'
+  // ── Keyboards & Piano ──────────────────────────────────────────────────────
+  | 'piano_grand'
+  | 'piano_baby_grand'
+  | 'piano_upright'
+  | 'keyboard'
+  | 'organ'
+  // ── Drums & Percussion ─────────────────────────────────────────────────────
+  | 'drums'
+  | 'drums_electronic'
+  | 'drums_kick'
+  | 'drums_snare'
+  | 'drums_hihat'
+  | 'drums_cymbal'
+  | 'cajon'
+  | 'congas'
+  | 'marimba'
+  | 'timpani'
+  // ── Horns & Winds ──────────────────────────────────────────────────────────
   | 'wind_trumpet'
   | 'wind_saxophone'
   | 'wind_flute'
   | 'wind_trombone'
-  | 'percussion'
-  | 'rectangle'
-  | 'circle'
+  // ── Microphones ────────────────────────────────────────────────────────────
+  | 'microphone'
+  | 'mic_stand'
+  | 'mic_overhead'
+  // ── PA & Monitors ──────────────────────────────────────────────────────────
+  | 'speaker_main'
+  | 'subwoofer'
+  | 'monitor'
+  | 'monitor_sidefill'
+  | 'monitor_iem'
+  | 'di_box'
+  // ── Stage & Environment ────────────────────────────────────────────────────
+  | 'platform'
+  | 'desk_foh'
+  // ── Cables ─────────────────────────────────────────────────────────────────
   | 'cable_xlr'
   | 'cable_trs'
   | 'cable_ts'
   | 'cable_midi'
   | 'cable_speakon'
+  // ── Annotations & Custom ───────────────────────────────────────────────────
   | 'text'
   | 'custom'
 
