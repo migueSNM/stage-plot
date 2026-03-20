@@ -970,7 +970,7 @@ export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
           />
           <Text
             x={width / 2 - 70}
-            y={GRID_SIZE / 2 - 7}
+            y={height - GRID_SIZE / 2 - 7}
             text={t('canvas.frontOfStage')}
             fontSize={11}
             fill={colors.stageText}
