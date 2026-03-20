@@ -5,93 +5,214 @@ import { usePrefsStore, type CustomItemDef } from '../../store/usePrefsStore'
 import { ICON_PATHS } from '../../assets/icons/iconPaths'
 import type { StageItem, StageItemType } from '../../../../shared/types'
 
-type PaletteEntry = { type: StageItemType; tKey: string; iconKey: string }
+// ─── Types ────────────────────────────────────────────────────────────────────
 
-const PALETTE_ITEMS: PaletteEntry[] = [
-  { type: 'person', tKey: 'palette.performer', iconKey: 'person' },
-  { type: 'microphone', tKey: 'palette.microphone', iconKey: 'microphone' },
-  { type: 'guitar', tKey: 'palette.guitar', iconKey: 'guitar' },
-  { type: 'bass', tKey: 'palette.bass', iconKey: 'bass' },
-  { type: 'keyboard', tKey: 'palette.keyboard', iconKey: 'keyboard' },
-  { type: 'drums', tKey: 'palette.drums', iconKey: 'drums' },
-  { type: 'percussion', tKey: 'palette.percussion', iconKey: 'percussion' },
-  { type: 'wind_trumpet', tKey: 'palette.windTrumpet', iconKey: 'wind_trumpet' },
-  { type: 'wind_trombone', tKey: 'palette.windTrombone', iconKey: 'wind_trombone' },
-  { type: 'wind_saxophone', tKey: 'palette.windSaxophone', iconKey: 'wind_saxophone' },
-  { type: 'wind_flute', tKey: 'palette.windFlute', iconKey: 'wind_flute' },
-  { type: 'monitor', tKey: 'palette.monitor', iconKey: 'monitor' },
-  { type: 'amp', tKey: 'palette.amp', iconKey: 'amp' },
-  { type: 'di_box', tKey: 'palette.diBox', iconKey: 'di_box' },
-  { type: 'speaker_main', tKey: 'palette.mainSpeaker', iconKey: 'speaker_main' },
-  { type: 'generic', tKey: 'palette.generic', iconKey: 'generic' }
-]
+type PaletteEntry = {
+  type: StageItemType
+  tKey: string
+  iconKey: string
+  defaultColor?: string
+}
 
-const SHAPE_ITEMS: PaletteEntry[] = [
-  { type: 'rectangle', tKey: 'palette.rectangle', iconKey: 'rectangle' },
-  { type: 'circle', tKey: 'palette.circle', iconKey: 'circle' }
+type PaletteCategory = {
+  id: string
+  tKey: string
+  items: PaletteEntry[]
+}
+
+// ─── Catalog ──────────────────────────────────────────────────────────────────
+
+const PALETTE_CATEGORIES: PaletteCategory[] = [
+  {
+    id: 'people',
+    tKey: 'palette.catPeople',
+    items: [
+      { type: 'person', tKey: 'palette.performer', iconKey: 'person' }
+    ]
+  },
+  {
+    id: 'guitars',
+    tKey: 'palette.catGuitars',
+    items: [
+      { type: 'guitar_acoustic',  tKey: 'palette.guitarAcoustic',  iconKey: 'guitar_acoustic' },
+      { type: 'guitar_electric',  tKey: 'palette.guitarElectric',  iconKey: 'guitar_electric' },
+      { type: 'guitar_classical', tKey: 'palette.guitarClassical', iconKey: 'guitar_classical' },
+      { type: 'bass_electric',    tKey: 'palette.bassElectric',    iconKey: 'bass_electric' },
+      { type: 'bass_upright',     tKey: 'palette.bassUpright',     iconKey: 'bass_upright' }
+    ]
+  },
+  {
+    id: 'amps',
+    tKey: 'palette.catAmps',
+    items: [
+      { type: 'amp_combo', tKey: 'palette.ampCombo', iconKey: 'amp_combo' },
+      { type: 'amp_head',  tKey: 'palette.ampHead',  iconKey: 'amp_head' },
+      { type: 'amp_cab',   tKey: 'palette.ampCab',   iconKey: 'amp_cab' },
+      { type: 'amp_bass',  tKey: 'palette.ampBass',  iconKey: 'amp_bass' }
+    ]
+  },
+  {
+    id: 'keys',
+    tKey: 'palette.catKeys',
+    items: [
+      { type: 'piano_grand',      tKey: 'palette.pianoGrand',      iconKey: 'piano_grand' },
+      { type: 'piano_baby_grand', tKey: 'palette.pianoBabyGrand',  iconKey: 'piano_baby_grand' },
+      { type: 'piano_upright',    tKey: 'palette.pianoUpright',    iconKey: 'piano_upright' },
+      { type: 'keyboard',         tKey: 'palette.keyboard',        iconKey: 'keyboard' },
+      { type: 'organ',            tKey: 'palette.organ',           iconKey: 'organ' }
+    ]
+  },
+  {
+    id: 'drums',
+    tKey: 'palette.catDrums',
+    items: [
+      { type: 'drums',            tKey: 'palette.drums',           iconKey: 'drums' },
+      { type: 'drums_electronic', tKey: 'palette.drumsElectronic', iconKey: 'drums_electronic' },
+      { type: 'drums_kick',       tKey: 'palette.drumsKick',       iconKey: 'drums_kick' },
+      { type: 'drums_snare',      tKey: 'palette.drumsSnare',      iconKey: 'drums_snare' },
+      { type: 'drums_hihat',      tKey: 'palette.drumsHihat',      iconKey: 'drums_hihat' },
+      { type: 'drums_cymbal',     tKey: 'palette.drumsCymbal',     iconKey: 'drums_cymbal' },
+      { type: 'cajon',            tKey: 'palette.cajon',           iconKey: 'cajon' },
+      { type: 'congas',           tKey: 'palette.congas',          iconKey: 'congas' },
+      { type: 'marimba',          tKey: 'palette.marimba',         iconKey: 'marimba' },
+      { type: 'timpani',          tKey: 'palette.timpani',         iconKey: 'timpani' }
+    ]
+  },
+  {
+    id: 'horns',
+    tKey: 'palette.catHorns',
+    items: [
+      { type: 'wind_trumpet',   tKey: 'palette.windTrumpet',   iconKey: 'wind_trumpet' },
+      { type: 'wind_trombone',  tKey: 'palette.windTrombone',  iconKey: 'wind_trombone' },
+      { type: 'wind_saxophone', tKey: 'palette.windSaxophone', iconKey: 'wind_saxophone' },
+      { type: 'wind_flute',     tKey: 'palette.windFlute',     iconKey: 'wind_flute' }
+    ]
+  },
+  {
+    id: 'mics',
+    tKey: 'palette.catMics',
+    items: [
+      { type: 'microphone',    tKey: 'palette.microphone',   iconKey: 'microphone' },
+      { type: 'mic_stand',     tKey: 'palette.micStand',     iconKey: 'mic_stand' },
+      { type: 'mic_overhead',  tKey: 'palette.micOverhead',  iconKey: 'mic_overhead' }
+    ]
+  },
+  {
+    id: 'pa',
+    tKey: 'palette.catPa',
+    items: [
+      { type: 'speaker_main',     tKey: 'palette.mainSpeaker',    iconKey: 'speaker_main' },
+      { type: 'subwoofer',        tKey: 'palette.subwoofer',      iconKey: 'subwoofer' },
+      { type: 'monitor',          tKey: 'palette.monitor',        iconKey: 'monitor' },
+      { type: 'monitor_sidefill', tKey: 'palette.monitorSidefill',iconKey: 'monitor_sidefill' },
+      { type: 'monitor_iem',      tKey: 'palette.monitorIem',     iconKey: 'monitor_iem' },
+      { type: 'di_box',           tKey: 'palette.diBox',          iconKey: 'di_box' }
+    ]
+  },
+  {
+    id: 'stage',
+    tKey: 'palette.catStage',
+    items: [
+      { type: 'platform', tKey: 'palette.platform', iconKey: 'platform', defaultColor: '#3a3a5c' },
+      { type: 'desk_foh', tKey: 'palette.deskFoh',  iconKey: 'desk_foh' }
+    ]
+  }
 ]
 
 const CABLE_ITEMS: PaletteEntry[] = [
-  { type: 'cable_xlr', tKey: 'palette.cableXlr', iconKey: 'cable' },
-  { type: 'cable_trs', tKey: 'palette.cableTrs', iconKey: 'cable' },
-  { type: 'cable_ts', tKey: 'palette.cableTs', iconKey: 'cable' },
-  { type: 'cable_midi', tKey: 'palette.cableMidi', iconKey: 'cable' },
-  { type: 'cable_speakon', tKey: 'palette.cableSpeakon', iconKey: 'cable' }
+  { type: 'cable_xlr',    tKey: 'palette.cableXlr',    iconKey: 'cable' },
+  { type: 'cable_trs',    tKey: 'palette.cableTrs',    iconKey: 'cable' },
+  { type: 'cable_ts',     tKey: 'palette.cableTs',     iconKey: 'cable' },
+  { type: 'cable_midi',   tKey: 'palette.cableMidi',   iconKey: 'cable' },
+  { type: 'cable_speakon',tKey: 'palette.cableSpeakon',iconKey: 'cable' }
 ]
 
 const ANNOTATION_ITEMS: PaletteEntry[] = [
   { type: 'text', tKey: 'palette.text', iconKey: 'text' }
 ]
 
-const DEFAULT_SIZES: Record<StageItemType, { w: number; h: number }> = {
-  person: { w: 60, h: 60 },
-  microphone: { w: 40, h: 40 },
-  monitor: { w: 80, h: 50 },
-  amp: { w: 70, h: 70 },
-  keyboard: { w: 120, h: 40 },
-  drums: { w: 100, h: 100 },
-  di_box: { w: 50, h: 50 },
-  speaker_main: { w: 60, h: 80 },
-  generic: { w: 60, h: 60 },
-  guitar: { w: 50, h: 80 },
-  bass: { w: 50, h: 80 },
-  wind_trumpet: { w: 60, h: 50 },
-  wind_saxophone: { w: 50, h: 70 },
-  wind_flute: { w: 40, h: 70 },
-  wind_trombone: { w: 80, h: 50 },
-  percussion: { w: 80, h: 80 },
-  rectangle: { w: 100, h: 60 },
-  circle: { w: 70, h: 70 },
-  cable_xlr: { w: 100, h: 0 },
-  cable_trs: { w: 100, h: 0 },
-  cable_ts: { w: 100, h: 0 },
-  cable_midi: { w: 100, h: 0 },
-  cable_speakon: { w: 100, h: 0 },
-  text: { w: 120, h: 30 },
-  custom: { w: 60, h: 60 }
+// ─── Default sizes per type ───────────────────────────────────────────────────
+
+const DEFAULT_SIZES: Partial<Record<StageItemType, { w: number; h: number }>> & { _default: { w: number; h: number } } = {
+  _default:         { w: 60, h: 60 },
+  // People
+  person:           { w: 60, h: 60 },
+  // Guitars & Basses
+  guitar_acoustic:  { w: 50, h: 90 },
+  guitar_electric:  { w: 50, h: 85 },
+  guitar_classical: { w: 50, h: 90 },
+  guitar:           { w: 50, h: 80 },
+  bass_electric:    { w: 50, h: 90 },
+  bass_upright:     { w: 50, h: 110 },
+  bass:             { w: 50, h: 80 },
+  // Amplifiers
+  amp_combo:        { w: 80, h: 80 },
+  amp_head:         { w: 100, h: 50 },
+  amp_cab:          { w: 80, h: 100 },
+  amp_bass:         { w: 90, h: 90 },
+  amp:              { w: 70, h: 70 },
+  // Keyboards & Piano
+  piano_grand:      { w: 160, h: 100 },
+  piano_baby_grand: { w: 130, h: 85 },
+  piano_upright:    { w: 130, h: 60 },
+  keyboard:         { w: 120, h: 40 },
+  organ:            { w: 110, h: 65 },
+  // Drums & Percussion
+  drums:            { w: 110, h: 110 },
+  drums_electronic: { w: 110, h: 70 },
+  drums_kick:       { w: 70, h: 55 },
+  drums_snare:      { w: 50, h: 40 },
+  drums_hihat:      { w: 40, h: 60 },
+  drums_cymbal:     { w: 55, h: 55 },
+  cajon:            { w: 45, h: 70 },
+  congas:           { w: 65, h: 80 },
+  marimba:          { w: 140, h: 55 },
+  timpani:          { w: 80, h: 65 },
+  percussion:       { w: 80, h: 80 },
+  // Horns & Winds
+  wind_trumpet:     { w: 65, h: 50 },
+  wind_trombone:    { w: 80, h: 50 },
+  wind_saxophone:   { w: 50, h: 70 },
+  wind_flute:       { w: 40, h: 70 },
+  // Microphones
+  microphone:       { w: 40, h: 55 },
+  mic_stand:        { w: 40, h: 70 },
+  mic_overhead:     { w: 55, h: 55 },
+  // PA & Monitors
+  speaker_main:     { w: 60, h: 80 },
+  subwoofer:        { w: 80, h: 80 },
+  monitor:          { w: 80, h: 55 },
+  monitor_sidefill: { w: 90, h: 60 },
+  monitor_iem:      { w: 60, h: 70 },
+  di_box:           { w: 50, h: 50 },
+  // Stage
+  platform:         { w: 200, h: 120 },
+  desk_foh:         { w: 100, h: 65 },
+  // Cables (stored as width=distance, height=0)
+  cable_xlr:        { w: 100, h: 0 },
+  cable_trs:        { w: 100, h: 0 },
+  cable_ts:         { w: 100, h: 0 },
+  cable_midi:       { w: 100, h: 0 },
+  cable_speakon:    { w: 100, h: 0 },
+  // Misc
+  text:             { w: 120, h: 30 },
+  custom:           { w: 60, h: 60 },
+  generic:          { w: 60, h: 60 }
 }
 
-// Shape/rectangle icon SVGs for palette display
-const SHAPE_SVG: Record<string, JSX.Element> = {
-  rectangle: (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-      <rect x="3" y="7" width="18" height="10" rx="1" />
-    </svg>
-  ),
-  circle: (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-      <circle cx="12" cy="12" r="8" />
-    </svg>
-  )
+function getSize(type: StageItemType): { w: number; h: number } {
+  return (DEFAULT_SIZES as Record<string, { w: number; h: number }>)[type] ?? DEFAULT_SIZES._default
 }
+
+// ─── Icon component ───────────────────────────────────────────────────────────
 
 function PaletteIcon({ iconKey }: { iconKey: string }): JSX.Element {
   const path = ICON_PATHS[iconKey]
   if (!path) return <span className="w-5 h-5" />
   return (
     <svg
-      width="20"
-      height="20"
+      width="18"
+      height="18"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -105,11 +226,30 @@ function PaletteIcon({ iconKey }: { iconKey: string }): JSX.Element {
   )
 }
 
+// ─── Chevron icon ─────────────────────────────────────────────────────────────
+
+function Chevron({ open }: { open: boolean }): JSX.Element {
+  return (
+    <svg
+      width="12"
+      height="12"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      style={{ transition: 'transform 0.15s', transform: open ? 'rotate(90deg)' : 'rotate(0deg)' }}
+    >
+      <polyline points="9 18 15 12 9 6" />
+    </svg>
+  )
+}
+
 function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
 }
 
-// ─── Custom Item Modal ────────────────────────────────────────────────────────
+// ─── Custom Item Modal ─────────────────────────────────────────────────────────
 
 const EMOJI_SUGGESTIONS = [
   '🎸','🎹','🥁','🎺','🎷','🎻','🎤','🎙','🎚','🎛',
@@ -145,7 +285,6 @@ function CustomItemModal({ initial, onSave, onClose }: CustomItemModalProps): JS
           {initial ? t('palette.customEdit') : t('palette.customNew')}
         </h3>
 
-        {/* Name */}
         <div className="flex flex-col gap-1">
           <label className="text-xs text-muted">{t('palette.customName')}</label>
           <input
@@ -158,7 +297,6 @@ function CustomItemModal({ initial, onSave, onClose }: CustomItemModalProps): JS
           />
         </div>
 
-        {/* Emoji picker */}
         <div className="flex flex-col gap-1">
           <label className="text-xs text-muted">{t('palette.customEmoji')}</label>
           <div className="flex flex-wrap gap-1">
@@ -181,7 +319,6 @@ function CustomItemModal({ initial, onSave, onClose }: CustomItemModalProps): JS
           />
         </div>
 
-        {/* Color */}
         <div className="flex flex-col gap-1">
           <label className="text-xs text-muted">{t('palette.customColor')}</label>
           <div className="flex items-center gap-2">
@@ -200,7 +337,6 @@ function CustomItemModal({ initial, onSave, onClose }: CustomItemModalProps): JS
           </div>
         </div>
 
-        {/* Actions */}
         <div className="flex gap-2 pt-1">
           <button
             onClick={onClose}
@@ -221,31 +357,70 @@ function CustomItemModal({ initial, onSave, onClose }: CustomItemModalProps): JS
   )
 }
 
+// ─── Category Section ─────────────────────────────────────────────────────────
+
+interface CategorySectionProps {
+  label: string
+  isOpen: boolean
+  onToggle: () => void
+  children: React.ReactNode
+}
+
+function CategorySection({ label, isOpen, onToggle, children }: CategorySectionProps): JSX.Element {
+  return (
+    <div>
+      <button
+        onClick={onToggle}
+        className="w-full flex items-center gap-1.5 px-2 py-1 mt-1 text-left rounded hover:bg-surface-2 transition-colors"
+      >
+        <span className="text-muted"><Chevron open={isOpen} /></span>
+        <span className="text-[10px] font-bold uppercase tracking-wider text-muted flex-1">{label}</span>
+      </button>
+      {isOpen && <div className="flex flex-col gap-0.5 pb-1">{children}</div>}
+    </div>
+  )
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export function ItemPalette(): JSX.Element {
   const { t } = useTranslation()
   const { activeProject, addItem } = useProjectStore()
   const { customItems, addCustomItem, updateCustomItem, deleteCustomItem } = usePrefsStore()
+
   const [search, setSearch] = useState('')
+  const [collapsedCats, setCollapsedCats] = useState<Set<string>>(new Set())
   const [modalState, setModalState] = useState<
     | { mode: 'create' }
     | { mode: 'edit'; def: CustomItemDef }
     | null
   >(null)
 
-  const query = search.toLowerCase()
-  const filtered = PALETTE_ITEMS.filter((item) => t(item.tKey).toLowerCase().includes(query))
-  const filteredShapes = SHAPE_ITEMS.filter((item) => t(item.tKey).toLowerCase().includes(query))
-  const filteredCables = CABLE_ITEMS.filter((item) => t(item.tKey).toLowerCase().includes(query))
-  const filteredAnnotations = ANNOTATION_ITEMS.filter((item) =>
-    t(item.tKey).toLowerCase().includes(query)
-  )
-  const filteredCustom = customItems.filter((c) => c.label.toLowerCase().includes(query))
+  const query = search.toLowerCase().trim()
+  const isSearching = query.length > 0
 
-  function handleAdd(type: StageItemType, label: string, extra?: StageItem['extra'], color?: string | null): void {
+  function toggleCat(id: string): void {
+    setCollapsedCats((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  function isCatOpen(id: string): boolean {
+    if (isSearching) return true // always open when searching
+    return !collapsedCats.has(id)
+  }
+
+  function handleAdd(
+    type: StageItemType,
+    label: string,
+    extra?: StageItem['extra'],
+    color?: string | null
+  ): void {
     if (!activeProject) return
-    const size = DEFAULT_SIZES[type]
+    const size = getSize(type)
     const isCable =
       type === 'cable_xlr' ||
       type === 'cable_trs' ||
@@ -281,37 +456,42 @@ export function ItemPalette(): JSX.Element {
     handleAdd('custom', def.label, { emoji: def.emoji, defId: def.id }, def.color)
   }
 
-  function renderSection(entries: PaletteEntry[], sectionKey: string): JSX.Element | null {
-    if (!entries.length) return null
+  function renderEntry({ type, tKey, iconKey, defaultColor }: PaletteEntry): JSX.Element {
+    const label = t(tKey)
     return (
-      <>
-        <SectionDivider label={t(sectionKey)} />
-        {entries.map(({ type, tKey, iconKey }) => {
-          const label = t(tKey)
-          const shapeEl = SHAPE_SVG[type]
-          return (
-            <button
-              key={type}
-              disabled={!activeProject}
-              onClick={() => handleAdd(type, label)}
-              className="flex items-center gap-2.5 px-3 py-2 rounded text-sm text-left
-                         hover:bg-surface-2 active:scale-95 disabled:opacity-30
-                         disabled:cursor-not-allowed transition-all"
-            >
-              <span className="w-5 h-5 flex items-center justify-center text-muted">
-                {shapeEl ?? <PaletteIcon iconKey={iconKey} />}
-              </span>
-              <span className="text-[13px]">{label}</span>
-            </button>
-          )
-        })}
-      </>
+      <button
+        key={type}
+        disabled={!activeProject}
+        onClick={() => handleAdd(type, label, undefined, defaultColor ?? null)}
+        className="flex items-center gap-2.5 px-3 py-1.5 rounded text-sm text-left
+                   hover:bg-surface-2 active:scale-95 disabled:opacity-30
+                   disabled:cursor-not-allowed transition-all"
+      >
+        <span className="w-[18px] h-[18px] flex items-center justify-center text-muted flex-shrink-0">
+          <PaletteIcon iconKey={iconKey} />
+        </span>
+        <span className="text-[12px] leading-tight">{label}</span>
+      </button>
     )
   }
 
+  // Filter entries for search
+  function filterEntries(entries: PaletteEntry[]): PaletteEntry[] {
+    if (!isSearching) return entries
+    return entries.filter((e) => t(e.tKey).toLowerCase().includes(query))
+  }
+
+  const filteredCables = filterEntries(CABLE_ITEMS)
+  const filteredAnnotations = filterEntries(ANNOTATION_ITEMS)
+  const filteredCustom = customItems.filter((c) => !isSearching || c.label.toLowerCase().includes(query))
+
+  const filteredCategories = PALETTE_CATEGORIES.map((cat) => ({
+    ...cat,
+    items: filterEntries(cat.items)
+  })).filter((cat) => !isSearching || cat.items.length > 0)
+
   const hasNoResults =
-    filtered.length === 0 &&
-    filteredShapes.length === 0 &&
+    filteredCategories.length === 0 &&
     filteredCables.length === 0 &&
     filteredAnnotations.length === 0 &&
     filteredCustom.length === 0
@@ -319,13 +499,16 @@ export function ItemPalette(): JSX.Element {
   return (
     <>
       <aside className="w-52 flex-shrink-0 bg-surface border-r border-border flex flex-col">
+        {/* Header + search */}
         <div className="px-3 pt-3 pb-2 border-b border-border flex flex-col gap-2">
           <h2 className="text-xs font-bold uppercase tracking-widest text-muted px-1">
             {t('palette.title')}
           </h2>
           <div className="relative">
             <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted text-xs pointer-events-none">
-              🔍
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
             </span>
             <input
               value={search}
@@ -345,53 +528,75 @@ export function ItemPalette(): JSX.Element {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-2 flex flex-col gap-0.5">
+        {/* Scrollable item list */}
+        <div className="flex-1 overflow-y-auto p-1.5 flex flex-col">
           {hasNoResults && (
             <p className="text-muted text-xs text-center py-6">{t('palette.noMatch')}</p>
           )}
 
-          {/* Instruments */}
-          {filtered.map(({ type, tKey, iconKey }) => {
-            const label = t(tKey)
-            return (
-              <button
-                key={type}
-                disabled={!activeProject}
-                onClick={() => handleAdd(type, label)}
-                className="flex items-center gap-2.5 px-3 py-2 rounded text-sm text-left
-                           hover:bg-surface-2 active:scale-95 disabled:opacity-30
-                           disabled:cursor-not-allowed transition-all"
-              >
-                <span className="w-5 h-5 flex items-center justify-center text-muted">
-                  <PaletteIcon iconKey={iconKey} />
-                </span>
-                <span className="text-[13px]">{label}</span>
-              </button>
-            )
-          })}
+          {/* Instrument categories */}
+          {filteredCategories.map((cat) => (
+            <CategorySection
+              key={cat.id}
+              label={t(cat.tKey)}
+              isOpen={isCatOpen(cat.id)}
+              onToggle={() => toggleCat(cat.id)}
+            >
+              {cat.items.map(renderEntry)}
+            </CategorySection>
+          ))}
 
-          {renderSection(filteredShapes, 'palette.shapes')}
-          {renderSection(filteredCables, 'palette.cables')}
-          {renderSection(filteredAnnotations, 'palette.annotations')}
+          {/* Cables */}
+          {filteredCables.length > 0 && (
+            <CategorySection
+              label={t('palette.catCables')}
+              isOpen={isCatOpen('cables')}
+              onToggle={() => toggleCat('cables')}
+            >
+              {filteredCables.map(renderEntry)}
+            </CategorySection>
+          )}
+          {!isSearching && filteredCables.length === 0 && (
+            <CategorySection
+              label={t('palette.catCables')}
+              isOpen={isCatOpen('cables')}
+              onToggle={() => toggleCat('cables')}
+            >
+              {CABLE_ITEMS.map(renderEntry)}
+            </CategorySection>
+          )}
 
-          {/* Custom Items */}
-          {(filteredCustom.length > 0 || !search) && (
-            <>
-              <SectionDivider label={t('palette.custom')} />
+          {/* Annotations */}
+          {(!isSearching || filteredAnnotations.length > 0) && (
+            <CategorySection
+              label={t('palette.catAnnotations')}
+              isOpen={isCatOpen('annotations')}
+              onToggle={() => toggleCat('annotations')}
+            >
+              {(isSearching ? filteredAnnotations : ANNOTATION_ITEMS).map(renderEntry)}
+            </CategorySection>
+          )}
+
+          {/* Custom items */}
+          {(!isSearching || filteredCustom.length > 0) && (
+            <CategorySection
+              label={t('palette.catCustom')}
+              isOpen={isCatOpen('custom')}
+              onToggle={() => toggleCat('custom')}
+            >
               {filteredCustom.map((def) => (
                 <div key={def.id} className="group flex items-center rounded hover:bg-surface-2">
                   <button
                     disabled={!activeProject}
                     onClick={() => handleAddCustom(def)}
-                    className="flex-1 flex items-center gap-2.5 px-3 py-2 text-sm text-left
+                    className="flex-1 flex items-center gap-2.5 px-3 py-1.5 text-sm text-left
                                active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                   >
-                    <span className="w-5 h-5 flex items-center justify-center text-base leading-none">
+                    <span className="w-[18px] h-[18px] flex items-center justify-center text-base leading-none flex-shrink-0">
                       {def.emoji}
                     </span>
-                    <span className="text-[13px] truncate">{def.label}</span>
+                    <span className="text-[12px] truncate">{def.label}</span>
                   </button>
-                  {/* Edit / delete shown on hover */}
                   <div className="hidden group-hover:flex items-center pr-1 gap-0.5">
                     <button
                       onClick={() => setModalState({ mode: 'edit', def })}
@@ -410,27 +615,25 @@ export function ItemPalette(): JSX.Element {
                   </div>
                 </div>
               ))}
-
-              {/* Add new custom item button */}
               <button
                 onClick={() => setModalState({ mode: 'create' })}
-                className="flex items-center gap-2.5 px-3 py-2 rounded text-sm text-left
+                className="flex items-center gap-2.5 px-3 py-1.5 rounded text-sm text-left
                            hover:bg-surface-2 active:scale-95 transition-all text-muted hover:text-white"
               >
-                <span className="w-5 h-5 flex items-center justify-center">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <span className="w-[18px] h-[18px] flex items-center justify-center flex-shrink-0">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                     <line x1="12" y1="5" x2="12" y2="19" />
                     <line x1="5" y1="12" x2="19" y2="12" />
                   </svg>
                 </span>
-                <span className="text-[13px]">{t('palette.customAdd')}</span>
+                <span className="text-[12px]">{t('palette.customAdd')}</span>
               </button>
-            </>
+            </CategorySection>
           )}
         </div>
       </aside>
 
-      {/* Custom item modal — rendered outside <aside> to avoid z-index issues */}
+      {/* Custom item modal */}
       {modalState && (
         <CustomItemModal
           initial={modalState.mode === 'edit' ? modalState.def : undefined}
@@ -446,15 +649,5 @@ export function ItemPalette(): JSX.Element {
         />
       )}
     </>
-  )
-}
-
-function SectionDivider({ label }: { label: string }): JSX.Element {
-  return (
-    <div className="flex items-center gap-2 px-1 pt-2 pb-1">
-      <div className="flex-1 h-px bg-border" />
-      <span className="text-[10px] font-bold uppercase tracking-widest text-muted">{label}</span>
-      <div className="flex-1 h-px bg-border" />
-    </div>
   )
 }

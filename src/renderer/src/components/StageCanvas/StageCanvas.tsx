@@ -82,6 +82,9 @@ export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
     nudgeItem,
     nudgeItems,
     deleteItems,
+    bringToFront,
+    sendToBack,
+    toggleLayerLock,
     registerExport,
     canvasScale,
     canvasPos,
@@ -94,6 +97,9 @@ export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
     backgroundWidth,
     backgroundHeight
   } = useProjectStore()
+
+  // Items sorted by sort_order so higher values render on top in Konva
+  const sortedItems = [...items].sort((a, b) => a.sort_order - b.sort_order)
 
   // Background image as HTMLImageElement for Konva
   const [bgHtmlImg, setBgHtmlImg] = useState<HTMLImageElement | null>(null)
@@ -170,7 +176,8 @@ export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
   const isSelectedShape =
     singleSelected?.type === 'rectangle' ||
     singleSelected?.type === 'circle' ||
-    singleSelected?.type === 'text'
+    singleSelected?.type === 'text' ||
+    singleSelected?.type === 'platform'
 
   // ── Attach Transformer to selected nodes ──────────────────────────────────
 
@@ -409,6 +416,21 @@ export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
 
   // ── Helpers ───────────────────────────────────────────────────────────────
 
+  // Bring a non-locked item to the top of the z-stack on single select
+  function selectItem(id: string, shiftKey: boolean): void {
+    if (shiftKey) {
+      setSelectedIds((prev) =>
+        prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+      )
+    } else {
+      setSelectedIds([id])
+      const item = useProjectStore.getState().items.find((i) => i.id === id)
+      if (item && !(item.extra as Record<string, unknown> | null)?.layerLocked) {
+        void bringToFront(id)
+      }
+    }
+  }
+
   function startEditing(item: StageItem): void {
     setEditingId(item.id)
     setEditText(item.label)
@@ -531,7 +553,7 @@ export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
       if (!item) continue
 
       const isShape =
-        item.type === 'rectangle' || item.type === 'circle' || item.type === 'text'
+        item.type === 'rectangle' || item.type === 'circle' || item.type === 'text' || item.type === 'platform'
       if (isShape && ids.length === 1) {
         const newWidth = Math.max(20, item.width * node.scaleX())
         const newHeight = Math.max(20, item.height * node.scaleY())
@@ -988,8 +1010,8 @@ export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
             />
           )}
 
-          {/* Cables rendered first so instruments appear on top */}
-          {items
+          {/* Cables rendered first (always below instruments) */}
+          {sortedItems
             .filter((item) => CABLE_TYPES.has(item.type))
             .map((cable) => {
               const { fromPos, toPos } = getCablePositions(cable)
@@ -1002,15 +1024,7 @@ export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
                   isSelected={selectedIds.includes(cable.id)}
                   onSelect={(e) => {
                     setBackgroundSelected(false)
-                    if (e.evt.shiftKey) {
-                      setSelectedIds((prev) =>
-                        prev.includes(cable.id)
-                          ? prev.filter((id) => id !== cable.id)
-                          : [...prev, cable.id]
-                      )
-                    } else {
-                      setSelectedIds([cable.id])
-                    }
+                    selectItem(cable.id, e.evt.shiftKey)
                   }}
                   onContextMenu={(x, y) => {
                     if (!selectedIds.includes(cable.id)) setSelectedIds([cable.id])
@@ -1041,8 +1055,8 @@ export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
             )
           })()}
 
-          {/* Instrument + shape + text items */}
-          {items
+          {/* Instrument + shape + text items — rendered in sort_order (lower = below) */}
+          {sortedItems
             .filter((item) => !CABLE_TYPES.has(item.type))
             .map((item) => {
               if (item.type === 'text') {
@@ -1058,19 +1072,11 @@ export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
                     }}
                     onSelect={(e) => {
                       setBackgroundSelected(false)
-                      if (e.evt.shiftKey) {
-                        setSelectedIds((prev) =>
-                          prev.includes(item.id)
-                            ? prev.filter((id) => id !== item.id)
-                            : [...prev, item.id]
-                        )
-                      } else {
-                        setSelectedIds([item.id])
-                      }
+                      selectItem(item.id, e.evt.shiftKey)
                     }}
                     onDragStart={(_e) => {
                       if (!selectedIdsRef.current.includes(item.id)) {
-                        setSelectedIds([item.id])
+                        selectItem(item.id, false)
                       }
                     }}
                     onDragMove={(e) => handleDragMove(item, e)}
@@ -1096,21 +1102,12 @@ export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
                   }}
                   onSelect={(e) => {
                     setBackgroundSelected(false)
-                    if (e.evt.shiftKey) {
-                      setSelectedIds((prev) =>
-                        prev.includes(item.id)
-                          ? prev.filter((id) => id !== item.id)
-                          : [...prev, item.id]
-                      )
-                    } else {
-                      setSelectedIds([item.id])
-                    }
+                    selectItem(item.id, e.evt.shiftKey)
                   }}
-                  onDragStart={(e) => {
+                  onDragStart={(_e) => {
                     if (!selectedIdsRef.current.includes(item.id)) {
-                      setSelectedIds([item.id])
+                      selectItem(item.id, false)
                     }
-                    void e
                   }}
                   onDragMove={(e) => handleDragMove(item, e)}
                   onDragEnd={(e) => handleDragEnd(item, e)}
@@ -1227,6 +1224,27 @@ export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
                 }}
               >
                 🎨 {t('contextMenu.changeColor')}
+              </button>
+              <button
+                className="w-full text-left px-4 py-2 text-sm hover:bg-surface-2 transition-colors flex items-center gap-2"
+                onClick={() => { void bringToFront(contextMenu.itemId); setContextMenu(null) }}
+              >
+                ⬆️ {t('contextMenu.bringToFront')}
+              </button>
+              <button
+                className="w-full text-left px-4 py-2 text-sm hover:bg-surface-2 transition-colors flex items-center gap-2"
+                onClick={() => { void sendToBack(contextMenu.itemId); setContextMenu(null) }}
+              >
+                ⬇️ {t('contextMenu.sendToBack')}
+              </button>
+              <div className="h-px bg-border mx-2 my-1" />
+              <button
+                className="w-full text-left px-4 py-2 text-sm hover:bg-surface-2 transition-colors flex items-center gap-2"
+                onClick={() => { void toggleLayerLock(contextMenu.itemId); setContextMenu(null) }}
+              >
+                {(contextMenuItem.extra as Record<string, unknown> | null)?.layerLocked
+                  ? `🔓 ${t('contextMenu.unlockLayer')}`
+                  : `🔒 ${t('contextMenu.lockLayer')}`}
               </button>
               <div className="h-px bg-border mx-2 my-1" />
             </>

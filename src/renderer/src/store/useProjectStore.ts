@@ -77,6 +77,11 @@ interface ProjectStore {
   deleteItem: (id: string) => Promise<void>
   deleteItems: (ids: string[]) => Promise<void>
   setItems: (items: StageItem[]) => void
+
+  // Layer management
+  bringToFront: (id: string) => Promise<void>
+  sendToBack: (id: string) => Promise<void>
+  toggleLayerLock: (id: string) => Promise<void>
 }
 
 function generateId(): string {
@@ -396,5 +401,39 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     set((s) => ({ items: s.items.filter((i) => !ids.includes(i.id)) }))
   },
 
-  setItems: (items) => set({ items })
+  setItems: (items) => set({ items }),
+
+  // ── Layer management ───────────────────────────────────────────────────────
+
+  bringToFront: async (id) => {
+    const { items } = get()
+    const item = items.find((i) => i.id === id)
+    if (!item) return
+    const maxOrder = Math.max(...items.map((i) => i.sort_order))
+    if (item.sort_order === maxOrder) return
+    const updated = { ...item, sort_order: maxOrder + 1 }
+    await window.api.items.save(updated)
+    set((s) => ({ items: s.items.map((i) => (i.id === id ? updated : i)) }))
+  },
+
+  sendToBack: async (id) => {
+    const { items } = get()
+    const item = items.find((i) => i.id === id)
+    if (!item) return
+    const minOrder = Math.min(...items.map((i) => i.sort_order))
+    if (item.sort_order === minOrder) return
+    const updated = { ...item, sort_order: minOrder - 1 }
+    await window.api.items.save(updated)
+    set((s) => ({ items: s.items.map((i) => (i.id === id ? updated : i)) }))
+  },
+
+  toggleLayerLock: async (id) => {
+    const { items } = get()
+    const item = items.find((i) => i.id === id)
+    if (!item) return
+    const currentlyLocked = !!(item.extra as Record<string, unknown> | null)?.layerLocked
+    const updated = { ...item, extra: { ...(item.extra ?? {}), layerLocked: !currentlyLocked } }
+    await window.api.items.save(updated)
+    set((s) => ({ items: s.items.map((i) => (i.id === id ? updated : i)) }))
+  }
 }))
