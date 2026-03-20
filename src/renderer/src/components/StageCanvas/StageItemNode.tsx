@@ -263,13 +263,14 @@ export function StageItemNode({
       )}
 
       {/* Body fill layer — instrument silhouette with item color */}
+      {/* Icons are flipped 180° (negative scale + shifted anchor) so they face the front of stage (bottom) */}
       {!isShape && !isPlatform && !isCustom && bodyData && (
         <Path
-          x={iconOffsetX}
-          y={iconOffsetY}
+          x={iconOffsetX + 24 * iconScale}
+          y={iconOffsetY + 24 * iconScale}
           data={bodyData}
-          scaleX={iconScale}
-          scaleY={iconScale}
+          scaleX={-iconScale}
+          scaleY={-iconScale}
           fill={color ?? '#2a2a40'}
           opacity={color ? 0.6 : 0.5}
           listening={false}
@@ -293,11 +294,11 @@ export function StageItemNode({
       )}
       {!isShape && !isPlatform && !isCustom && pathData && (
         <Path
-          x={iconOffsetX}
-          y={iconOffsetY}
+          x={iconOffsetX + 24 * iconScale}
+          y={iconOffsetY + 24 * iconScale}
           data={pathData}
-          scaleX={iconScale}
-          scaleY={iconScale}
+          scaleX={-iconScale}
+          scaleY={-iconScale}
           fill="none"
           stroke={color ? 'rgba(255,255,255,0.9)' : '#999999'}
           strokeWidth={2 / iconScale}
