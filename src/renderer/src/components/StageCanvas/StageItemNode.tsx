@@ -1,13 +1,12 @@
 import { useState } from 'react'
-import { Group, Rect, Circle, Text, Path, Image as KonvaImage } from 'react-konva'
+import { Group, Rect, Circle, Text, Path } from 'react-konva'
 import type Konva from 'konva'
 import type { StageItem, StageItemType } from '../../../../shared/types'
-import { ICON_BODIES } from '../../assets/icons/iconPaths'
-import { getInstrumentImage } from '../../assets/instruments/index'
+import { ICON_PATHS, ICON_BODIES } from '../../assets/icons/iconPaths'
 
 export const LABEL_HEIGHT = 22
 
-// Emoji fallbacks for types not covered by ICON_BODIES (custom items only)
+// Emoji fallbacks for types not covered by ICON_PATHS
 export const ITEM_ICONS: Record<StageItemType, string> = {
   // People
   person: '🎤',
@@ -131,8 +130,8 @@ export function StageItemNode({
         ? (color ?? '#888888')
         : 'transparent'
 
-  // SVG body silhouette path for this item type (if available)
-  // ICON_PATHS is exported for palette use only (ItemPalette.tsx)
+  // SVG path data for this item type (if available)
+  const pathData = ICON_PATHS[item.type]
   const bodyData = ICON_BODIES[item.type]
 
   // For custom items the emoji is stored in extra.emoji
@@ -263,48 +262,25 @@ export function StageItemNode({
         />
       )}
 
-      {/* Instrument icon: SVG image (preferred) or path fallback */}
-      {!isShape && !isPlatform && !isCustom && (() => {
-        const img = getInstrumentImage(item.type)
-        if (img) {
-          const imgSize = Math.min(width, height) * 0.82
-          const imgX = (width - imgSize) / 2
-          const imgY = height / 2 - imgSize / 2 - 2
-          return (
-            <KonvaImage
-              image={img}
-              x={imgX}
-              y={imgY}
-              width={imgSize}
-              height={imgSize}
-              opacity={isSelected ? 1 : showHover ? 0.95 : 0.88}
-              listening={false}
-              shadowBlur={isSelected ? 18 : showHover ? 12 : color ? 10 : 0}
-              shadowColor={isSelected ? '#ffffff' : showHover ? '#ffffff' : (color ?? '#ffffff')}
-              shadowOpacity={isSelected ? 0.75 : showHover ? 0.5 : color ? 0.55 : 0}
-            />
-          )
-        }
-        // Fallback: path-based white silhouette
-        if (!bodyData) return null
-        return (
-          <Path
-            x={iconOffsetX + 24 * iconScale}
-            y={iconOffsetY + 24 * iconScale}
-            data={bodyData}
-            scaleX={-iconScale}
-            scaleY={-iconScale}
-            fill="rgba(255,255,255,0.92)"
-            opacity={isSelected ? 1 : showHover ? 0.95 : 0.88}
-            listening={false}
-            shadowBlur={isSelected ? 18 : showHover ? 12 : color ? 10 : 0}
-            shadowColor={isSelected ? '#ffffff' : showHover ? '#ffffff' : (color ?? '#ffffff')}
-            shadowOpacity={isSelected ? 0.75 : showHover ? 0.5 : color ? 0.55 : 0}
-          />
-        )
-      })()}
+      {/* Body fill layer — instrument silhouette with item color */}
+      {/* Icons are flipped 180° (negative scale + shifted anchor) so they face the front of stage (bottom) */}
+      {!isShape && !isPlatform && !isCustom && bodyData && (
+        <Path
+          x={iconOffsetX + 24 * iconScale}
+          y={iconOffsetY + 24 * iconScale}
+          data={bodyData}
+          scaleX={-iconScale}
+          scaleY={-iconScale}
+          fill={color ?? '#2a2a40'}
+          opacity={color ? 0.6 : 0.5}
+          listening={false}
+          shadowBlur={isSelected ? 14 : showHover ? 10 : color ? 6 : 3}
+          shadowColor={isSelected ? '#ffffff' : showHover ? '#ffffff' : (color ?? 'rgba(100,100,180,0.8)')}
+          shadowOpacity={isSelected ? 0.5 : showHover ? 0.35 : 0.3}
+        />
+      )}
 
-      {/* Custom items: emoji text */}
+      {/* Icon: SVG path for built-in types, emoji text for custom */}
       {!isShape && !isPlatform && isCustom && (
         <Text
           x={0}
@@ -313,6 +289,22 @@ export function StageItemNode({
           text={customEmoji}
           fontSize={iconFontSize}
           align="center"
+          listening={false}
+        />
+      )}
+      {!isShape && !isPlatform && !isCustom && pathData && (
+        <Path
+          x={iconOffsetX + 24 * iconScale}
+          y={iconOffsetY + 24 * iconScale}
+          data={pathData}
+          scaleX={-iconScale}
+          scaleY={-iconScale}
+          fill="none"
+          stroke={color ? 'rgba(255,255,255,0.9)' : '#999999'}
+          strokeWidth={2 / iconScale}
+          strokeScaleEnabled={false}
+          lineCap="round"
+          lineJoin="round"
           listening={false}
         />
       )}
