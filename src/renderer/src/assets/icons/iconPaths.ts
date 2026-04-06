@@ -1,341 +1,371 @@
 /**
- * SVG icon definitions for all built-in item types.
- * All paths designed on a 24×24 viewBox.
+ * SVG icon body silhouettes for all built-in item types.
+ * All paths are on a 24×24 viewBox.
+ * Rendered with fill-rule="evenodd" so inner sub-paths act as cutouts
+ * (soundholes, speaker cones, knobs, etc.).
  *
- * ICON_BODIES: filled silhouette paths — rendered with item color (or dark neutral) at ~0.55 opacity
- * ICON_PATHS:  detail/outline paths   — rendered as white strokes on top of the fill
+ * ICON_BODIES: filled silhouette — white fill, evenodd cutouts for details
+ * ICON_PATHS:  (unused — kept for reference only)
  */
 
+// helper: full circle as arc path  M cx+r cy  A r r 0 1 0 cx-r cy  A r r 0 1 0 cx+r cy Z
 // ── Filled body silhouettes ────────────────────────────────────────────────
 export const ICON_BODIES: Partial<Record<string, string>> = {
-  // ── People ───────────────────────────────────────────────────────────────
-  // Top-down: head circle + shoulder/torso arc
+
+  // ── Person (vocalist) ────────────────────────────────────────────────────
+  // Head + torso. Simple, recognisable human silhouette.
   person:
-    'M12 2.5a3.5 3.5 0 1 1 0 7 3.5 3.5 0 0 1 0-7z' +
-    'M5 22v-5a7 7 0 0 1 14 0v5H5z',
+    'M12 1a3 3 0 1 0 0.01 0Z' +                         // head
+    'M7 23v-4.5C7 16 9 14 12 14s5 2 5 4.5V23H7Z',      // torso/shoulders
 
-  // ── Guitars & Basses ─────────────────────────────────────────────────────
-  // Acoustic guitar: figure-8 body (upper + lower bout) + neck stub
+  // ── Acoustic Guitar ───────────────────────────────────────────────────────
+  // Figure-8 body, neck, headstock, soundhole cutout.
   guitar_acoustic:
-    'M10.5 0h3v9.5h-3z' +
-    'M12 9.5a7.5 7 0 1 0 .01 0z' +
-    'M12 7.5Q9 7.5 9 10.5Q9 12 12 12Q15 12 15 10.5Q15 7.5 12 7.5z',
+    // headstock
+    'M10 0h4v2.5h-4Z' +
+    // neck + body (continuous)
+    'M10.75 2.5V8C7.8 8.6 6 10.2 6 12.2C6 13.8 7 15 9 15.6' +
+    'C7 16.4 6 18 6 19.5C6 23 8.8 24.5 12 24.5' +
+    'C15.2 24.5 18 23 18 19.5C18 18 17 16.4 15 15.6' +
+    'C17 15 18 13.8 18 12.2C18 10.2 16.2 8.6 13.25 8V2.5H10.75Z' +
+    // soundhole cutout (evenodd)
+    'M14.3 19.5A2.3 2.3 0 1 0 9.7 19.5A2.3 2.3 0 0 0 14.3 19.5Z',
 
-  // Electric guitar: slim double-cutaway body + neck + headstock
+  // ── Electric Guitar (Stratocaster style) ──────────────────────────────────
   guitar_electric:
-    'M9.5 0h5v3h-5z' +
-    'M10.5 3h3v7.5h-3z' +
-    'M10.5 10.5C8 10.5 5.5 12 5.5 14.5C5.5 17 6 19 7 21C8 23 9.5 24 12 24C14.5 24 16 23 17 21C18 19 18.5 17 18.5 14.5C18.5 12 16 10.5 13.5 10.5Z',
+    // headstock
+    'M10.5 0.5h3v2l1.5 0.5V4.5H10.5V2.5Z' +
+    // neck
+    'M11 4.5h2V11h-2Z' +
+    // double-cutaway body
+    'M11 11C9.2 11 7 12 7 13.5C7 14.5 7.8 15.5 9.5 15.8' +
+    'L7.5 16.5C6 17.5 5.5 19 5.5 20.5C5.5 23 8 25 12 25' +
+    'C16 25 18.5 23 18.5 20.5C18.5 19 18 17.5 16.5 16.5L14.5 15.8' +
+    'C16.2 15.5 17 14.5 17 13.5C17 12 14.8 11 13 11H11Z',
 
-  // Classical guitar: similar figure-8 with slightly narrower waist
+  // ── Classical Guitar ──────────────────────────────────────────────────────
   guitar_classical:
-    'M10.5 0h3v9h-3z' +
-    'M12 9a6.5 6.5 0 1 0 .01 0z' +
-    'M12 7.5Q9.5 7.5 9.5 10.5Q9.5 12 12 12Q14.5 12 14.5 10.5Q14.5 7.5 12 7.5z',
+    'M10 0h4v2.5h-4Z' +
+    'M10.75 2.5V8C8 8.6 6.5 10 6.5 11.8C6.5 13.3 7.5 14.5 9.5 15' +
+    'C7.5 15.8 6.5 17.2 6.5 18.8C6.5 22 9 24 12 24' +
+    'C15 24 17.5 22 17.5 18.8C17.5 17.2 16.5 15.8 14.5 15' +
+    'C16.5 14.5 17.5 13.3 17.5 11.8C17.5 10 16 8.6 13.25 8V2.5H10.75Z' +
+    'M14 18.2A2 2 0 1 0 10 18.2A2 2 0 0 0 14 18.2Z',
 
-  // Bass electric: longer neck + offset smaller body
+  // ── Electric Bass ─────────────────────────────────────────────────────────
   bass_electric:
-    'M9.5 0h5v3h-5z' +
-    'M10.5 3h3v9h-3z' +
-    'M10.5 12C8 12 5 13.5 5 16C5 18.5 6 20.5 7.5 22C9 23.5 10.5 24 12 24C13.5 24 15 23.5 16.5 22C18 20.5 19 18.5 19 16C19 13.5 16 12 13.5 12Z',
+    // headstock (4-peg bass style)
+    'M10.5 0h3v2l1.5 0.5V4H10.5V2Z' +
+    // longer neck
+    'M11 4h2V12h-2Z' +
+    // P-bass offset body
+    'M11 12C9 12 6.5 13 6.5 15.2C6.5 16.7 7.8 17.8 10 18.3' +
+    'L7.5 19.2C6 20 5.5 21.5 5.5 23C5.5 24 6.5 25 8 25' +
+    'H16C17.5 25 18.5 24 18.5 23C18.5 21.5 18 20 16.5 19.2' +
+    'L14 18.3C16.2 17.8 17.5 16.7 17.5 15.2C17.5 13 15 12 13 12H11Z',
 
-  // Upright bass: wide round body + scroll headstock
+  // ── Upright / Double Bass ─────────────────────────────────────────────────
   bass_upright:
-    'M11 0C10 0 9 1 9 2.5L9 5H10.5C11 5 11 5 11 5V9.5C7.5 10.5 4 13.5 4 18C4 22 7.6 25 12 25C16.4 25 20 22 20 18C20 13.5 16.5 10.5 13 9.5V5H14.5L14.5 2.5C14.5 1 13.5 0 11 0Z',
+    // scroll + neck
+    'M10.5 0C9.5 0 9 0.8 9 2V5H10.5C11 5 11.5 5.5 11.5 6V9.5' +
+    'C7.5 10.5 4.5 13.5 4.5 17.5C4.5 22 7.8 24.5 12 24.5' +
+    'C16.2 24.5 19.5 22 19.5 17.5C19.5 13.5 16.5 10.5 12.5 9.5V6' +
+    'C12.5 5.5 13 5 13.5 5H15V2C15 0.8 14.5 0 13.5 0H10.5Z' +
+    // f-hole left (evenodd cutout)
+    'M9.5 14.5V19.5C9.5 20 9.8 20.5 10.3 20.5C10.8 20.5 11.2 20 11.2 19.5' +
+    'V14.5C11.2 14 10.8 13.5 10.3 13.5C9.8 13.5 9.5 14 9.5 14.5Z' +
+    // f-hole right
+    'M12.8 14.5V19.5C12.8 20 13.2 20.5 13.7 20.5C14.2 20.5 14.5 20 14.5 19.5' +
+    'V14.5C14.5 14 14.2 13.5 13.7 13.5C13.2 13.5 12.8 14 12.8 14.5Z',
 
-  // ── Amplifiers ───────────────────────────────────────────────────────────
-  amp_combo:   'M3 7h18v14H3z',
-  amp_head:    'M2 9h20v7H2z',
-  amp_cab:     'M4 3h16v18H4z',
-  amp_bass:    'M3 6h18v15H3z',
-  amp:         'M3 5h18v14H3z',
-
-  // ── Keyboards & Pianos ───────────────────────────────────────────────────
-  // Grand piano top-down: straight left edge (keyboard) + curved tail
-  piano_grand:
-    'M4 5h2v14H4z' +
-    'M6 5Q22 7 22 12Q22 17 6 19V5z',
-
-  // Baby grand: shorter
-  piano_baby_grand:
-    'M4 6h2v12H4z' +
-    'M6 6Q20 7.5 20 12Q20 16.5 6 18V6z',
-
-  // Upright piano: tall rectangular front
-  piano_upright: 'M3 4h18v17H3z',
-
-  // Stage keyboard: wide flat
-  keyboard: 'M2 9h20v7H2z',
-
-  // Organ: two manual rows + pedal board
-  organ: 'M2 4h20v4H2zM2 10h20v4H2zM5 16h14v4H5z',
-
-  // ── Drums & Percussion ───────────────────────────────────────────────────
-  // Full kit top-down: kick (center), 3 rack toms (arc above), snare (front left), floor tom (right)
+  // ── Drums (top-down kit) ───────────────────────────────────────────────────
   drums:
-    'M6.5 12.5a5.5 4.5 0 1 1 11 0 5.5 4.5 0 0 1-11 0z' +  // kick drum
-    'M3.5 7a2.5 2.5 0 1 1 5 0 2.5 2.5 0 0 1-5 0z' +        // snare
-    'M9 5.5a2 2 0 1 1 4 0 2 2 0 0 1-4 0z' +                  // rack tom 1
-    'M14.5 6.5a2 2 0 1 1 4 0 2 2 0 0 1-4 0z' +               // rack tom 2
-    'M18 12a2.5 2.5 0 1 1 5 0 2.5 2.5 0 0 1-5 0z' +          // floor tom
-    'M1 10a2 2 0 1 1 4 0 2 2 0 0 1-4 0z',                    // hihat
+    'M6 15A6 5 0 1 0 18 15A6 5 0 0 0 6 15Z' +          // kick drum
+    'M4 9.5A2.5 2.5 0 1 0 9 9.5A2.5 2.5 0 0 0 4 9.5Z' + // snare (front-L)
+    'M9 6.5A2 2 0 1 0 13 6.5A2 2 0 0 0 9 6.5Z' +        // rack tom 1
+    'M13 7A2 2 0 1 0 17 7A2 2 0 0 0 13 7Z' +             // rack tom 2
+    'M17.5 13.5A2.5 2.5 0 1 0 22.5 13.5A2.5 2.5 0 0 0 17.5 13.5Z' + // floor tom
+    'M1 12A2 1.5 0 1 0 5 12A2 1.5 0 0 0 1 12Z' +        // hi-hat
+    'M17.5 8A2.5 1.5 0 1 0 22.5 8A2.5 1.5 0 0 0 17.5 8Z', // ride cymbal
 
-  // Electronic kit: row of rectangular pads
-  drums_electronic: 'M2 9h20v6H2z',
+  // ── Electronic Drum Kit ───────────────────────────────────────────────────
+  drums_electronic:
+    'M2 7.5h20v10H2Z' +                                  // rack frame
+    'M4 9.5h4v4.5H4Z' +                                  // pad 1
+    'M10 9.5h4v4.5h-4Z' +                                // pad 2
+    'M16 9.5h4v4.5h-4Z' +                                // pad 3
+    'M7 20h3v3H7Z' +                                     // leg 1
+    'M14 20h3v3h-3Z',                                    // leg 2
 
-  // Kick drum: large barrel ellipse (side view)
-  drums_kick: 'M3 12a9 6 0 1 1 18 0 9 6 0 0 1-18 0z',
+  // ── Kick Drum (side view) ─────────────────────────────────────────────────
+  drums_kick:
+    'M3.5 12A8.5 7 0 1 0 20.5 12A8.5 7 0 0 0 3.5 12Z' + // shell
+    'M8.5 12A3.5 3 0 1 0 15.5 12A3.5 3 0 0 0 8.5 12Z',  // batter head
 
-  // Snare drum: cylinder with head (side view)
-  drums_snare: 'M4 9.5a8 3.5 0 0 1 16 0v5a8 3.5 0 0 1-16 0z',
+  // ── Snare Drum (side view) ────────────────────────────────────────────────
+  drums_snare:
+    'M3.5 9.5A8.5 3.5 0 0 1 20.5 9.5V15A8.5 3.5 0 0 1 3.5 15Z',
 
-  // Hi-hat: two stacked cymbal ellipses
+  // ── Hi-Hat ────────────────────────────────────────────────────────────────
   drums_hihat:
-    'M4.5 7a7.5 2.5 0 1 1 15 0 7.5 2.5 0 0 1-15 0z' +
-    'M4.5 10.5a7.5 2.5 0 1 1 15 0 7.5 2.5 0 0 1-15 0z',
+    'M3.5 7.5A8.5 2.5 0 1 0 20.5 7.5A8.5 2.5 0 0 0 3.5 7.5Z' +
+    'M3.5 11A8.5 2.5 0 1 0 20.5 11A8.5 2.5 0 0 0 3.5 11Z' +
+    'M11 8.5h2V11h-2Z',                                  // rod
 
-  // Cymbal: shallow dish
-  drums_cymbal: 'M3 9a9 2.5 0 1 1 18 0v1a9 2.5 0 0 1-18 0z',
+  // ── Cymbal ────────────────────────────────────────────────────────────────
+  drums_cymbal:
+    'M2.5 9.5A9.5 3 0 1 0 21.5 9.5A9.5 3 0 0 0 2.5 9.5Z' +
+    'M9.5 9.5A2.5 1 0 1 0 14.5 9.5A2.5 1 0 0 0 9.5 9.5Z', // dome cutout
 
-  // Cajon: box (front view)
-  cajon: 'M6 4h12v16H6z',
+  // ── Cajon ─────────────────────────────────────────────────────────────────
+  cajon:
+    'M7 3h10v18H7Z' +
+    'M10 8.5A2 2.5 0 1 0 14 8.5A2 2.5 0 0 0 10 8.5Z',  // sound port
 
-  // Congas: two tall tapered drums
+  // ── Congas ────────────────────────────────────────────────────────────────
   congas:
-    'M3 8a3.5 4 0 0 1 7 0v10H3z' +
-    'M14 8a3.5 4 0 0 1 7 0v10h-7z',
+    // left conga (tall tapered drum)
+    'M3.5 6.5A3.5 3.5 0 0 1 10.5 6.5V19C10.5 20.5 9.5 22 7 22C4.5 22 3.5 20.5 3.5 19Z' +
+    // right conga (taller)
+    'M13.5 5.5A3.5 3.5 0 0 1 20.5 5.5V19.5C20.5 21.5 19 23 17 23C15 23 13.5 21.5 13.5 19.5Z',
 
-  // Marimba: bars above + resonator tubes below
+  // ── Marimba / Xylophone ───────────────────────────────────────────────────
   marimba:
-    'M2 7h20v4H2z' +
-    'M3.5 11h2v7h-2zM7 11h2v8H7zM10.5 11h2v9h-2zM14 11h2v8h-2zM17.5 11h2v7h-2z',
+    // bars (graduated heights, longer at left)
+    'M2.5 5h2.5v5H2.5Z' +
+    'M6 4.5h2.5v5.5H6Z' +
+    'M9.5 4h2.5v6H9.5Z' +
+    'M13 4h2.5v6H13Z' +
+    'M16.5 4.5h2.5v5.5h-2.5Z' +
+    'M19 5h2.5v5H19Z' +
+    // resonator tubes
+    'M3 10h1.5v7H3ZM6.5 10h1.5v8H6.5ZM10 10h1.5v9H10ZM13.5 10h1.5v8h-1.5ZM17 10h1.5v7H17ZM19.5 10h1.5v6h-1.5Z',
 
-  // Timpani: kettle bowl shape
-  timpani: 'M3 13Q3 8 12 7Q21 8 21 13a9 4 0 0 1-18 0z',
+  // ── Timpani ───────────────────────────────────────────────────────────────
+  timpani:
+    // kettle (open top hemisphere + stem)
+    'M3 13C3 9 7 6.5 12 6.5C17 6.5 21 9 21 13A9 4.5 0 0 1 3 13Z' +
+    'M5 14Q5 19.5 12 20Q19 19.5 19 14',                  // bowl rim
 
-  // ── Horns & Winds ────────────────────────────────────────────────────────
-  // Trumpet: horizontal valves + bell flare (side profile)
+  // ── Percussion (generic) ──────────────────────────────────────────────────
+  percussion:
+    'M1.5 12A5.5 5 0 1 0 12.5 12A5.5 5 0 0 0 1.5 12Z' +
+    'M11.5 11A5.5 5 0 1 0 22.5 11A5.5 5 0 0 0 11.5 11Z',
+
+  // ── Trumpet ───────────────────────────────────────────────────────────────
   wind_trumpet:
-    'M4 10h8v4H4z' +            // main tube body
-    'M12 10h2v4h-2z' +          // valve cluster left
-    'M14 10h2v4h-2z' +          // valve cluster mid
-    'M16 10h2v4h-2z' +          // valve cluster right
-    'M18 9Q24 9 24 12Q24 15 18 15v-6z',  // bell flare
+    // main lead pipe
+    'M2 11h13v2.5H2Z' +
+    // three valves (cylinders sticking up)
+    'M7 8h2.5v6H7Z' +
+    'M10.5 8h2.5v6h-2.5Z' +
+    'M14 8h2.5v6H14Z' +
+    // bell flare
+    'M15 9.5Q22 9.5 22 12.25Q22 15 15 15Z' +
+    // mouthpiece receiver
+    'M1 10h2.5v4H1Z',
 
-  // Trombone: U-slide + bell
+  // ── Trombone ──────────────────────────────────────────────────────────────
   wind_trombone:
-    'M5 7h2v10H5z' +   // outer left slide
-    'M5 7h7v2H5z' +    // top crossbar
-    'M5 15h7v2H5z' +   // bottom crossbar
-    'M10 5h2v14h-2z' + // inner slide
-    'M10 5h5v2h-5z' +  // slide top
-    'M10 15h5v2h-5z' + // slide bottom
-    'M14 5h2v14h-2z' + // right tube
-    'M16 5Q22 6 22 12Q22 18 16 19v-14z', // bell
+    // outer slide (left vertical)
+    'M1.5 7.5h2.5v9H1.5Z' +
+    // top bar
+    'M1.5 7.5h9v2.5h-9Z' +
+    // bottom bar
+    'M1.5 14.5h9v2.5h-9Z' +
+    // inner slide (right side)
+    'M8.5 5.5h2.5v13H8.5Z' +
+    'M11 5.5h2.5v13H11Z' +
+    // upper brace
+    'M11 5.5h7v2.5h-7Z' +
+    // lower brace
+    'M11 16h7v2.5h-7Z' +
+    // right tube
+    'M16 5.5h2.5v13H16Z' +
+    // bell flare
+    'M18.5 5.5Q23.5 6.5 23.5 12Q23.5 17.5 18.5 18.5V5.5Z',
 
-  // Saxophone: crook at top + wide curved body + bell
+  // ── Saxophone ─────────────────────────────────────────────────────────────
   wind_saxophone:
-    'M9 2h5Q17 2 17 5v11Q17 20 12 22Q7 20 7 17V5Q7 2 9 2z',
+    // main curved body
+    'M14 1C12 1 10 2.5 10 5V15.5C10 19.5 11.5 22.5 12 23' +
+    'C12.5 22.5 14 19.5 14 15.5V5C14 3.5 15 2.5 16 2.5' +
+    'C15.5 1.5 14.8 1 14 1Z' +
+    // bell flare at bottom
+    'M10 17.5Q7 19.5 6 22L9.5 23.5Q10.5 22 12 20.5Z' +
+    // neck crook + mouthpiece
+    'M14 1L15 0.5L16 1.5L15 2.5Z',
 
-  // Flute: horizontal cylinder
-  wind_flute: 'M2 10h20v4H2z',
+  // ── Flute ─────────────────────────────────────────────────────────────────
+  wind_flute:
+    'M1.5 10.5h21v3H1.5Z' +                             // body tube
+    'M1.5 8.5h3v2.5h-3Z' +                              // head joint / embouchure
+    'M7.5 7.5A1.5 1.5 0 1 0 10.5 7.5A1.5 1.5 0 0 0 7.5 7.5Z' + // key 1
+    'M13 7.5A1.5 1.5 0 1 0 16 7.5A1.5 1.5 0 0 0 13 7.5Z',      // key 2
 
-  // ── Microphones ──────────────────────────────────────────────────────────
-  // Handheld mic: rounded capsule head + handle
+  // ── Microphone (handheld) ─────────────────────────────────────────────────
   microphone:
-    'M9 2h6a3 3 0 0 1 3 3v5a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3V5a3 3 0 0 1 3-3z' +
-    'M10.5 13h3v7h-3z',
+    // capsule head (rounded dome top, straight sides)
+    'M9 2C7.5 2 7 3.5 7 5V10.5C7 12.8 9.2 14.5 12 14.5' +
+    'C14.8 14.5 17 12.8 17 10.5V5C17 3.5 16.5 2 15 2H9Z' +
+    // handle / grip
+    'M10.5 14.5h3V23h-3Z' +
+    // grill lines (evenodd cutouts on capsule)
+    'M7 6.5h10v1H7ZM7 8.5h10v1H7ZM7 10.5h10v1H7Z',
 
-  // Mic on stand: same capsule + stand pole + base
+  // ── Microphone on Stand ───────────────────────────────────────────────────
   mic_stand:
-    'M9 2h6a3 3 0 0 1 3 3v4a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3V5a3 3 0 0 1 3-3z' +
-    'M11 12h2v8h-2z' +
-    'M8 20h8v2H8z',
+    // capsule
+    'M9.5 1.5C8 1.5 7.5 3 7.5 4.5V9.5C7.5 11.8 9.5 13.5 12 13.5' +
+    'C14.5 13.5 16.5 11.8 16.5 9.5V4.5C16.5 3 16 1.5 14.5 1.5H9.5Z' +
+    // pole
+    'M11.5 13.5h1V21h-1Z' +
+    // base tripod
+    'M8.5 21h7v1.5h-7Z' +
+    'M7 22.5L9 24h-2ZM17 22.5L15 24h2Z',
 
-  // Overhead mic: small capsule + horizontal boom arm
+  // ── Overhead Microphone ───────────────────────────────────────────────────
   mic_overhead:
-    'M10 3h4a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z' +
-    'M4 9h6v2H4z' +
-    'M4 9v9H6V11H4z',
+    // small capsule (side address)
+    'M10 2C9 2 8 3 8 4.5V9.5C8 11 9 12 10 12H14C15 12 16 11 16 9.5V4.5C16 3 15 2 14 2H10Z' +
+    // horizontal boom arm
+    'M2.5 9h8V11H2.5Z' +
+    // vertical stand
+    'M2.5 9V18.5H4V11H2.5Z',
 
-  // ── PA & Monitors ────────────────────────────────────────────────────────
-  speaker_main:    'M4 2h16v20H4z',
-  subwoofer:       'M3 3h18v18H3z',
-  monitor:         'M3 21L12 7l9 14H3z',
-  monitor_sidefill:'M2 22L10.5 5h3L22 22H2z',
+  // ── Speaker / PA Main ─────────────────────────────────────────────────────
+  speaker_main:
+    // cabinet
+    'M4 2h16v21H4Z' +
+    // LF driver surround (cutout ring)
+    'M6.5 14A5.5 5.5 0 1 0 17.5 14A5.5 5.5 0 0 0 6.5 14Z' +
+    // cone (evenodd refill)
+    'M9 14A3 3 0 1 0 15 14A3 3 0 0 0 9 14Z' +
+    // HF tweeter (cutout)
+    'M10 6.5A2 2 0 1 0 14 6.5A2 2 0 0 0 10 6.5Z',
 
-  // IEM: two earbud capsules
+  // ── Subwoofer ─────────────────────────────────────────────────────────────
+  subwoofer:
+    'M3 3h18v18H3Z' +
+    'M6 12A6 6 0 1 0 18 12A6 6 0 0 0 6 12Z' +           // surround
+    'M9 12A3 3 0 1 0 15 12A3 3 0 0 0 9 12Z',            // cone
+
+  // ── Floor Monitor Wedge ───────────────────────────────────────────────────
+  monitor:
+    // wedge body
+    'M1.5 22.5L11 4.5h2L22.5 22.5H1.5Z' +
+    // speaker surround (cutout)
+    'M7.5 18A4.5 4.5 0 1 0 16.5 18A4.5 4.5 0 0 0 7.5 18Z' +
+    // cone (refill)
+    'M10 18A2 2 0 1 0 14 18A2 2 0 0 0 10 18Z',
+
+  // ── Side Fill Monitor ─────────────────────────────────────────────────────
+  monitor_sidefill:
+    'M2 22.5L11 4h2L22 22.5H2Z' +
+    'M8.5 18A3.5 3.5 0 1 0 15.5 18A3.5 3.5 0 0 0 8.5 18Z',
+
+  // ── IEM / In-Ear Monitor ──────────────────────────────────────────────────
   monitor_iem:
-    'M5.5 7a4 5.5 0 0 0 0 11a4 5.5 0 0 0 0-11z' +
-    'M18.5 7a4 5.5 0 0 0 0 11a4 5.5 0 0 0 0-11z',
+    // two earbuds
+    'M5 6A3.5 6 0 1 0 5 18A3.5 6 0 0 0 5 6Z' +
+    'M19 6A3.5 6 0 1 0 19 18A3.5 6 0 0 0 19 6Z' +
+    // cable connecting them
+    'M8.5 12h7v1.5h-7Z',
 
-  // DI box: small rectangle
-  di_box: 'M4 6h16v12H4z',
+  // ── DI Box ────────────────────────────────────────────────────────────────
+  di_box:
+    'M4 5h16v15H4Z' +                                   // box body
+    'M20 9h3v6h-3Z' +                                   // XLR out port
+    'M1 9h3v6H1Z' +                                     // line in port
+    'M8 8.5h8v2H8Z' +                                   // top label strip
+    'M7 13h10v2.5H7Z',                                  // pad switch area
 
-  // ── Stage & Environment ──────────────────────────────────────────────────
-  // FOH position: angled mixing console (trapezoid)
-  desk_foh: 'M3 11h18v8H3zM3 11L5 5h14L21 11z',
+  // ── FOH Mixing Desk ───────────────────────────────────────────────────────
+  desk_foh:
+    // main surface (trapezoid)
+    'M3 11h18v11H3Z' +
+    // angled meter bridge
+    'M3 11L5 4h14l2 7H3Z' +
+    // channel faders (cutouts on main surface)
+    'M5.5 13h2v6h-2ZM9 13h2v7H9ZM12.5 13h2v6h-2ZM16 13h2v6h-2Z',
 
-  // ── Legacy ───────────────────────────────────────────────────────────────
-  generic: 'M4 4h16v16H4z',
-  guitar:  'M10.5 0h3v9h-3zM12 9a6 6 0 1 0 .01 0z',
-  bass:    'M10.5 0h3v10h-3zM12 10a5 6 0 1 0 .01 0z',
-}
+  // ── Generic / Fallback ────────────────────────────────────────────────────
+  generic: 'M4 4h16v16H4Z',
 
-// ── Detail stroke paths ───────────────────────────────────────────────────
-// Rendered as white strokes on top of ICON_BODIES.
-export const ICON_PATHS: Record<string, string> = {
-  // ── People ───────────────────────────────────────────────────────────────
-  person:
-    'M12 2.5a3.5 3.5 0 1 1 0 7M8.5 12a7 7 0 0 1 7 0',
-
-  // ── Guitars & Basses ─────────────────────────────────────────────────────
-  guitar_acoustic:
-    'M12 11a2 2 0 1 0 .01 0M9 16h6M10.5 18.5h3',
-
-  guitar_electric:
-    'M10.5 3v7.5M13.5 3v7.5M6.5 15c4 2 7 2 11 0M8 20c2.5 1.5 5.5 1.5 8 0',
-
-  guitar_classical:
-    'M12 10.5a1.5 1.5 0 1 0 .01 0M9 15.5h6M10.5 18h3',
-
+  // ── Legacy aliases ────────────────────────────────────────────────────────
   guitar:
-    'M12 11a2 2 0 1 0 .01 0M8 16h8M10 18h4',
-
-  bass_electric:
-    'M10.5 3v9M13.5 3v9M7 18.5c3 1.5 7 1.5 10 0',
-
-  bass_upright:
-    'M10 15v-3M14 15v-3M12 20v4M10 24h4',
+    'M10 0h4v2.5h-4Z' +
+    'M10.75 2.5V8C7.8 8.6 6 10.2 6 12.2C6 13.8 7 15 9 15.6' +
+    'C7 16.4 6 18 6 19.5C6 23 8.8 24.5 12 24.5' +
+    'C15.2 24.5 18 23 18 19.5C18 18 17 16.4 15 15.6' +
+    'C17 15 18 13.8 18 12.2C18 10.2 16.2 8.6 13.25 8V2.5H10.75Z' +
+    'M14.3 19.5A2.3 2.3 0 1 0 9.7 19.5A2.3 2.3 0 0 0 14.3 19.5Z',
 
   bass:
-    'M12 12a2 2 0 1 0 .01 0M8 17h8',
-
-  // ── Amplifiers ───────────────────────────────────────────────────────────
-  amp_combo:
-    'M12 14a4 4 0 1 0 .01 0M12 14a1.5 1.5 0 1 0 .01 0M5 10h2M5 12h2M15 10h2',
-
-  amp_head:
-    'M5 12a1 1 0 1 0 .01 0M9 12a1 1 0 1 0 .01 0M13 12a1 1 0 1 0 .01 0M17 12a1 1 0 1 0 .01 0M4 14.5h16',
-
-  amp_cab:
-    'M9 9a2.5 2.5 0 1 0 .01 0M15 9a2.5 2.5 0 1 0 .01 0M9 15a2.5 2.5 0 1 0 .01 0M15 15a2.5 2.5 0 1 0 .01 0',
-
-  amp_bass:
-    'M12 13.5a4.5 4.5 0 1 0 .01 0M12 13.5a2 2 0 1 0 .01 0M5 9h2',
+    'M10.5 0h3v2l1.5 0.5V4H10.5V2Z' +
+    'M11 4h2V12h-2Z' +
+    'M11 12C9 12 6.5 13 6.5 15.2C6.5 16.7 7.8 17.8 10 18.3' +
+    'L7.5 19.2C6 20 5.5 21.5 5.5 23C5.5 24 6.5 25 8 25' +
+    'H16C17.5 25 18.5 24 18.5 23C18.5 21.5 18 20 16.5 19.2' +
+    'L14 18.3C16.2 17.8 17.5 16.7 17.5 15.2C17.5 13 15 12 13 12H11Z',
 
   amp:
-    'M12 12a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM5 8h3M15 8h2',
+    'M3 5h18v14H3Z' +
+    'M6.5 12A5.5 5.5 0 1 0 17.5 12A5.5 5.5 0 0 0 6.5 12Z' +
+    'M9.5 12A2.5 2.5 0 1 0 14.5 12A2.5 2.5 0 0 0 9.5 12Z',
 
-  // ── Keyboards & Pianos ───────────────────────────────────────────────────
+  // Amp variants
+  amp_combo:
+    'M3 6h18v17H3Z' +                                   // cabinet
+    'M5.5 14.5A6.5 6.5 0 1 0 18.5 14.5A6.5 6.5 0 0 0 5.5 14.5Z' + // woofer ring
+    'M9 14.5A3 3 0 1 0 15 14.5A3 3 0 0 0 9 14.5Z' +    // cone
+    'M5 8h3v2.5H5Z' +                                   // control left
+    'M14 8h5v2.5h-5Z',                                  // controls right
+
+  amp_head:
+    'M2 8h20v9H2Z' +                                    // unit body
+    'M4.5 10.5A1.5 1.5 0 1 0 7.5 10.5A1.5 1.5 0 0 0 4.5 10.5Z' +  // knob 1
+    'M8.5 10.5A1.5 1.5 0 1 0 11.5 10.5A1.5 1.5 0 0 0 8.5 10.5Z' + // knob 2
+    'M12.5 10.5A1.5 1.5 0 1 0 15.5 10.5A1.5 1.5 0 0 0 12.5 10.5Z' + // knob 3
+    'M16.5 10.5A1.5 1.5 0 1 0 19.5 10.5A1.5 1.5 0 0 0 16.5 10.5Z',  // knob 4
+
+  amp_cab:
+    'M4 2.5h16v20H4Z' +                                 // cabinet
+    'M7 10A5 5 0 1 0 17 10A5 5 0 0 0 7 10Z' +          // driver surround
+    'M9.5 10A2.5 2.5 0 1 0 14.5 10A2.5 2.5 0 0 0 9.5 10Z', // cone
+
+  amp_bass:
+    'M3 5h18v18H3Z' +                                   // cabinet
+    'M5.5 15A6.5 6.5 0 1 0 18.5 15A6.5 6.5 0 0 0 5.5 15Z' + // woofer
+    'M9 15A3 3 0 1 0 15 15A3 3 0 0 0 9 15Z',           // cone
+
+  // Piano variants
   piano_grand:
-    'M9 5v14M12 5v14M15 6v12M18 7v10M21 9v6',
+    'M3 5.5h2.5v14H3Z' +                               // left edge (keyboard spine)
+    'M5.5 5.5Q23 7 23 12.5Q23 18 5.5 20V5.5Z' +        // curved lid + body
+    'M3 20h20v2.5H3Z',                                  // base
 
   piano_baby_grand:
-    'M9 6v12M12 6v12M15 7v10',
+    'M3 6.5h2.5v12H3Z' +
+    'M5.5 6.5Q21 8 21 13Q21 18 5.5 19.5V6.5Z' +
+    'M3 19.5h18v2H3Z',
 
   piano_upright:
-    'M3 14h18M6 14v7M9 14v7M12 14v7M15 14v7M18 14v7M5 8h2M9 7.5h2M14 7.5h2M17.5 8h2',
+    'M3 3h18v16H3Z' +                                   // main body
+    'M3 19h18v1.5H3Z' +                                 // keyboard rail
+    'M5 20.5h3V24H5Z' +                                 // left leg
+    'M16 20.5h3V24h-3Z',                                // right leg
 
   keyboard:
-    'M6 9v7M10 9v7M14 9v7M18 9v7M8 9v4M12 9v4M16 9v4',
+    'M1.5 7.5h21v9H1.5Z' +                             // body
+    // black key cutouts (evenodd)
+    'M4.5 7.5h2.5V14H4.5ZM8.5 7.5H11V14H8.5ZM13.5 7.5H16V14h-2.5ZM17 7.5h2.5V14H17Z',
 
   organ:
-    'M5 4v4M8 4v4M11 4v4M14 4v4M17 4v4M5 10v4M8 10v4M11 10v4M14 10v4M17 10v4M7 16v4M12 16v4M17 16v4',
-
-  // ── Drums & Percussion ───────────────────────────────────────────────────
-  drums:
-    'M6.5 12.5a5.5 4.5 0 0 0 11 0M12 10v5M3.5 7a2.5 2.5 0 0 0 5 0M2 13l-1.5 8M22 13l1 7',
-
-  drums_electronic:
-    'M6 9v6M9 9v6M12 9v6M15 9v6M18 9v6M3 15l-1 4M21 15l1 4',
-
-  drums_kick:
-    'M7 10l10 4M7 14l10-4M3 12a9 6 0 0 0 18 0',
-
-  drums_snare:
-    'M5 14l14-5M5 15.5l14-5',
-
-  drums_hihat:
-    'M12 13.5v9M9.5 22h5',
-
-  drums_cymbal:
-    'M12 11v9M9 20h6',
-
-  cajon:
-    'M9.5 9a2.5 3 0 1 0 5 0 2.5 3 0 0 0-5 0M6 20l-2 2M18 20l2 2',
-
-  congas:
-    'M3 8a3.5 4 0 0 0 7 0M14 8a3.5 4 0 0 0 7 0M5 11h3M16 11h3',
-
-  percussion:
-    'M3 14a4.5 5 0 1 0 9 0M13 12a5 5 0 1 0 10 0',
-
-  marimba:
-    'M6 8v3M9.5 7v4M13 7v4M16.5 7v3M20 8v3M6.5 11h3M14.5 11h4',
-
-  timpani:
-    'M6 13v2M9 12.5v2.5M12 12v3M15 12.5v2.5M18 13v2',
-
-  // ── Horns & Winds ────────────────────────────────────────────────────────
-  wind_trumpet:
-    'M6 11v2M8 10.5v3M10 10.5v3M12 10.5v3M14 10.5v3M16 10.5v3',
-
-  wind_trombone:
-    'M10 7h4M10 17h4',
-
-  wind_saxophone:
-    'M9 7h5M9 10.5h5M9 14h4M12 19a3 3 0 0 0 3-3',
-
-  wind_flute:
-    'M4 10v4M7 9.5a2 2 0 1 0 .01 0M13 9.5a2 2 0 1 0 .01 0M19 9.5a2 2 0 1 0 .01 0',
-
-  // ── Microphones ──────────────────────────────────────────────────────────
-  microphone:
-    'M9 6h6M9 8.5h6M9 11h6M12 13v4M9 17h6',
-
-  mic_stand:
-    'M9 5.5h6M9 8h6M12 12v8M9 20h6',
-
-  mic_overhead:
-    'M10 6h4M10 8.5h4M4 10h6',
-
-  // ── PA & Monitors ────────────────────────────────────────────────────────
-  speaker_main:
-    'M12 9a5 5 0 1 0 .01 0M12 11a3 3 0 1 0 .01 0M10 3h4',
-
-  subwoofer:
-    'M12 12a6 6 0 1 0 .01 0M12 12a2.5 2.5 0 1 0 .01 0',
-
-  monitor:
-    'M11 17a3 3 0 1 0 .01 0M12 12l-1 5M13 12l1 5',
-
-  monitor_sidefill:
-    'M12 16a3.5 3.5 0 1 0 .01 0',
-
-  monitor_iem:
-    'M7 15v4M17 15v4M9 22H5M21 22h-4',
-
-  di_box:
-    'M20 9h3M20 15h3M1 12h3M8 10h8M8 14h8',
-
-  // ── Stage & Environment ──────────────────────────────────────────────────
-  desk_foh:
-    'M7 14v5M10 14v5M13 14v5M16 14v5M8 14h2M11 15h2M14 16h2',
-
-  // Platform riser (used as grid lines on the opaque fill — rendered via platform branch)
-  platform:
-    'M2 8l4-4h16l-4 4M22 8v10l-4 4M2 8h20v10H2M6 8v10M10 8v10M14 8v10M18 8v10',
-
-  // ── Annotations ──────────────────────────────────────────────────────────
-  text: 'M5 7h14M12 7v11',
-
-  // Cable palette icon
-  cable: 'M4 12h16M4 12a2 2 0 1 0 .01 0M20 12a2 2 0 1 0 .01 0',
-
-  // Generic fallback
-  generic: 'M4 4h16v16H4zM12 8v8M8 12h8',
-
-  // Custom placeholder
-  custom: 'M12 2l3 7h7l-6 4.5 2.3 7-6.3-4.5-6.3 4.5 2.3-7L2 9h7z',
+    'M2 3h20v5H2Z' +                                   // upper manual
+    'M2 9.5h20v5H2Z' +                                  // lower manual
+    'M5 16h14v4H5Z',                                    // pedalboard
 }
+
+// ── Detail strokes (kept for reference, not rendered) ─────────────────────
+export const ICON_PATHS: Record<string, string> = {}

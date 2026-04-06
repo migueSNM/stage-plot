@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Group, Rect, Circle, Text, Path } from 'react-konva'
 import type Konva from 'konva'
 import type { StageItem, StageItemType } from '../../../../shared/types'
-import { ICON_PATHS, ICON_BODIES } from '../../assets/icons/iconPaths'
+import { ICON_BODIES } from '../../assets/icons/iconPaths'
 
 export const LABEL_HEIGHT = 22
 
@@ -131,7 +131,6 @@ export function StageItemNode({
         : 'transparent'
 
   // SVG path data for this item type (if available)
-  const pathData = ICON_PATHS[item.type]
   const bodyData = ICON_BODIES[item.type]
 
   // For custom items the emoji is stored in extra.emoji
@@ -272,6 +271,7 @@ export function StageItemNode({
           scaleX={-iconScale}
           scaleY={-iconScale}
           fill="rgba(255,255,255,0.92)"
+          fillRule="evenodd"
           opacity={isSelected ? 1 : showHover ? 0.95 : 0.88}
           listening={false}
           shadowBlur={isSelected ? 14 : showHover ? 10 : 4}
