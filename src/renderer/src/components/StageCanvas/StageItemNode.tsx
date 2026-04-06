@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { Group, Rect, Circle, Text, Path } from 'react-konva'
+import { Group, Rect, Circle, Text, Path, Image as KonvaImage } from 'react-konva'
 import type Konva from 'konva'
 import type { StageItem, StageItemType } from '../../../../shared/types'
 import { ICON_BODIES } from '../../assets/icons/iconPaths'
+import { getInstrumentImage } from '../../assets/instruments/index'
 
 export const LABEL_HEIGHT = 22
 
@@ -262,23 +263,49 @@ export function StageItemNode({
         />
       )}
 
-      {/* White silhouette icon — flat fill, color expressed via shadow glow */}
-      {/* Icons are flipped 180° (negative scale + shifted anchor) so they face the front of stage (bottom) */}
-      {!isShape && !isPlatform && !isCustom && bodyData && (
-        <Path
-          x={iconOffsetX + 24 * iconScale}
-          y={iconOffsetY + 24 * iconScale}
-          data={bodyData}
-          scaleX={-iconScale}
-          scaleY={-iconScale}
-          fill="rgba(255,255,255,0.92)"
-          opacity={isSelected ? 1 : showHover ? 0.95 : 0.88}
-          listening={false}
-          shadowBlur={isSelected ? 18 : showHover ? 12 : color ? 10 : 0}
-          shadowColor={isSelected ? '#ffffff' : showHover ? '#ffffff' : (color ?? '#ffffff')}
-          shadowOpacity={isSelected ? 0.75 : showHover ? 0.5 : color ? 0.55 : 0}
-        />
-      )}
+      {/* Instrument icon: SVG image (preferred) or path fallback */}
+      {/* Flipped 180° via scaleY=-1 so the instrument faces the front of stage (bottom) */}
+      {!isShape && !isPlatform && !isCustom && (() => {
+        const img = getInstrumentImage(item.type)
+        if (img) {
+          // Use the preloaded SVG image
+          const imgSize = Math.min(width, height) * 0.82
+          const imgX = (width - imgSize) / 2
+          const imgY = height / 2 - imgSize / 2 - 2
+          return (
+            <KonvaImage
+              image={img}
+              x={imgX}
+              y={imgY + imgSize}   // offset because scaleY=-1 flips from bottom edge
+              width={imgSize}
+              height={imgSize}
+              scaleY={-1}
+              opacity={isSelected ? 1 : showHover ? 0.95 : 0.88}
+              listening={false}
+              shadowBlur={isSelected ? 18 : showHover ? 12 : color ? 10 : 0}
+              shadowColor={isSelected ? '#ffffff' : showHover ? '#ffffff' : (color ?? '#ffffff')}
+              shadowOpacity={isSelected ? 0.75 : showHover ? 0.5 : color ? 0.55 : 0}
+            />
+          )
+        }
+        // Fallback: path-based white silhouette
+        if (!bodyData) return null
+        return (
+          <Path
+            x={iconOffsetX + 24 * iconScale}
+            y={iconOffsetY + 24 * iconScale}
+            data={bodyData}
+            scaleX={-iconScale}
+            scaleY={-iconScale}
+            fill="rgba(255,255,255,0.92)"
+            opacity={isSelected ? 1 : showHover ? 0.95 : 0.88}
+            listening={false}
+            shadowBlur={isSelected ? 18 : showHover ? 12 : color ? 10 : 0}
+            shadowColor={isSelected ? '#ffffff' : showHover ? '#ffffff' : (color ?? '#ffffff')}
+            shadowOpacity={isSelected ? 0.75 : showHover ? 0.5 : color ? 0.55 : 0}
+          />
+        )
+      })()}
 
       {/* Custom items: emoji text */}
       {!isShape && !isPlatform && isCustom && (

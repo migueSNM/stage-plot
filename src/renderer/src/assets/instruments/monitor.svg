@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" fill="white">
+  <!-- Stage monitor wedge: side profile -->
+  <path d="M 4 88 L 4 50 L 72 10 L 92 88 Z" rx="2"/>
+  <!-- Speaker circle on angled face -->
+  <circle fill="#1a1a1a" cx="52" cy="56" r="18"/>
+  <circle cx="52" cy="56" r="10"/>
+  <circle fill="#1a1a1a" cx="52" cy="56" r="5"/>
+</svg>

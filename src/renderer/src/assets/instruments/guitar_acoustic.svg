@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" fill="white">
+  <!-- Headstock + neck -->
+  <path d="M 37 2 H 59 V 14 H 54 V 36 H 42 V 14 H 37 Z"/>
+  <!-- Figure-8 body with soundhole cutout -->
+  <path fill-rule="evenodd" d="
+    M 42 36 C 36 36 26 38 22 44 C 18 50 20 58 24 62 C 26 64 28 66 30 66
+    C 28 68 26 72 26 76 C 26 84 36 92 48 92 C 60 92 70 84 70 76
+    C 70 72 68 68 66 66 C 68 66 70 64 72 62 C 76 58 78 50 74 44
+    C 70 38 60 36 54 36 Z
+    M 48 42 C 44 42 41 45 41 49 C 41 53 44 56 48 56 C 52 56 55 53 55 49 C 55 45 52 42 48 42 Z
+  "/>
+</svg>

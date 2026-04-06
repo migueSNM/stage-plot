@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" fill="white">
+  <!-- Sidefill: taller/wider wedge -->
+  <path d="M 2 92 L 2 44 L 78 6 L 94 92 Z"/>
+  <!-- Speaker -->
+  <circle fill="#1a1a1a" cx="56" cy="58" r="22"/>
+  <circle cx="56" cy="58" r="13"/>
+  <circle fill="#1a1a1a" cx="56" cy="58" r="6"/>
+</svg>

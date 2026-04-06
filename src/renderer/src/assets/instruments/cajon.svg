@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" fill="white">
+  <!-- Cajon: wooden box, front view -->
+  <rect x="22" y="8" width="52" height="80" rx="3"/>
+  <!-- Sound hole (oval at center-bottom area) -->
+  <ellipse fill="#1a1a1a" cx="48" cy="60" rx="14" ry="18"/>
+  <!-- Front face detail (slightly inset panel at top) -->
+  <rect fill="#1a1a1a" x="26" y="12" width="44" height="28" rx="2"/>
+</svg>

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" fill="white">
+  <!-- Trumpet: horizontal side view with valve casings and bell -->
+  <!-- Main body tube -->
+  <rect x="8" y="40" width="60" height="10" rx="4"/>
+  <!-- Return loop (U-bend) -->
+  <rect x="6" y="40" width="10" height="20" rx="5"/>
+  <rect x="6" y="50" width="30" height="10" rx="4"/>
+  <!-- Valve section (three valve casings) -->
+  <rect x="38" y="28" width="10" height="24" rx="4"/>
+  <rect x="52" y="28" width="10" height="24" rx="4"/>
+  <rect x="66" y="28" width="10" height="24" rx="4"/>
+  <!-- Bell tube leading to flare -->
+  <path d="M 68 43 C 78 40 86 38 90 36 C 94 34 96 38 94 42 C 92 46 86 50 78 52 C 72 54 68 52 68 50 Z"/>
+  <!-- Mouthpiece -->
+  <ellipse cx="12" cy="38" rx="6" ry="4"/>
+</svg>

@@ -4,6 +4,7 @@ import { Toolbar } from './components/Toolbar/Toolbar'
 import { ItemPalette } from './components/ItemPalette/ItemPalette'
 import { StageCanvas } from './components/StageCanvas/StageCanvas'
 import { useProjectStore } from './store/useProjectStore'
+import { preloadInstrumentImages } from './assets/instruments/index'
 
 type UpdateStatus = 'downloading' | 'ready' | 'error' | null
 
@@ -14,6 +15,9 @@ export default function App(): JSX.Element {
   const [canvasSize, setCanvasSize] = useState({ width: 800, height: 600 })
   const [updateVersion, setUpdateVersion] = useState<string | null>(null)
   const [updateStatus, setUpdateStatus] = useState<UpdateStatus>(null)
+
+  // Preload all instrument SVG images on mount
+  useEffect(() => { preloadInstrumentImages() }, [])
 
   // Observe canvas container size
   useEffect(() => {

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" fill="white">
+  <!-- Baby grand: shorter tail -->
+  <path d="
+    M 4 72 L 4 86 L 92 86 L 92 72
+    C 92 62 82 44 66 34 C 56 28 40 26 30 26
+    L 4 26 L 4 64
+    C 8 58 16 54 24 54 C 36 54 44 62 44 70 L 44 72 Z
+  "/>
+  <rect x="4" y="72" width="88" height="14" rx="1"/>
+  <rect fill="#1a1a1a" x="14" y="72" width="6" height="9" rx="1"/>
+  <rect fill="#1a1a1a" x="24" y="72" width="6" height="9" rx="1"/>
+  <rect fill="#1a1a1a" x="39" y="72" width="6" height="9" rx="1"/>
+  <rect fill="#1a1a1a" x="49" y="72" width="6" height="9" rx="1"/>
+  <rect fill="#1a1a1a" x="59" y="72" width="6" height="9" rx="1"/>
+  <rect fill="#1a1a1a" x="73" y="72" width="6" height="9" rx="1"/>
+  <rect fill="#1a1a1a" x="83" y="72" width="6" height="9" rx="1"/>
+</svg>
