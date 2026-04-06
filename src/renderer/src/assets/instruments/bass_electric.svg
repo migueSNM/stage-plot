@@ -1,11 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" fill="white">
-  <!-- Bass: longer neck, offset body (P-Bass style) -->
-  <path d="
-    M 37 2 H 57 V 13 H 52 V 42
-    C 58 42 66 38 72 32 C 78 26 84 24 86 30 C 88 36 82 42 74 46
-    C 70 50 64 50 58 52 C 68 56 76 66 76 76 C 76 86 68 92 56 92
-    C 44 92 34 88 28 82 C 20 74 18 64 22 56 C 24 50 28 46 34 44
-    C 30 42 26 40 22 38 C 14 34 8 28 10 22 C 12 16 18 16 22 22
-    C 26 28 32 34 40 36 V 42 H 42 V 13 H 37 Z
-  "/>
+  <!-- Bass guitar: longer neck, offset P-Bass body, angled -->
+  <g transform="translate(48,48) rotate(-28) translate(-48,-48)">
+    <!-- Headstock -->
+    <rect x="38" y="2" width="18" height="10" rx="3"/>
+    <!-- Neck (longer than guitar) -->
+    <rect x="42" y="12" width="10" height="32"/>
+    <!-- Bass horn (single treble cutaway style) -->
+    <path d="M52 44 C58 42 70 38 76 32 C82 26 80 18 74 18 C68 18 64 24 60 32 C58 36 55 40 52 44Z"/>
+    <!-- Body -->
+    <path d="M42 44 C28 46 16 56 16 68 C16 80 28 90 48 90 C66 90 80 80 80 68 C80 56 68 46 52 44Z"/>
+  </g>
 </svg>

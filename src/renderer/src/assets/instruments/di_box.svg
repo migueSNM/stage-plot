@@ -1,14 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" fill="white">
-  <!-- DI box: small rectangular metal box, top-down view -->
-  <rect x="18" y="24" width="60" height="48" rx="4"/>
-  <!-- XLR input (left side) - circle connectors -->
-  <circle fill="#1a1a1a" cx="28" cy="48" r="7"/>
-  <circle cx="28" cy="48" r="4"/>
-  <!-- XLR output (right side) -->
-  <circle fill="#1a1a1a" cx="68" cy="48" r="7"/>
-  <circle cx="68" cy="48" r="4"/>
-  <!-- Switch/button on top -->
-  <rect fill="#1a1a1a" x="40" y="36" width="16" height="8" rx="3"/>
-  <!-- LED indicator -->
-  <circle fill="#1a1a1a" cx="48" cy="62" r="4"/>
+  <!-- DI box: small rectangle with connector holes as cutouts -->
+  <path fill-rule="evenodd" d="
+    M 16 24 L 80 24 L 80 72 L 16 72 Z
+    M 28 48 a 8 8 0 1 0 0.01 0Z
+    M 68 48 a 8 8 0 1 0 0.01 0Z
+  "/>
 </svg>

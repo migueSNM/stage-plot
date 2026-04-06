@@ -264,11 +264,9 @@ export function StageItemNode({
       )}
 
       {/* Instrument icon: SVG image (preferred) or path fallback */}
-      {/* Flipped 180° via scaleY=-1 so the instrument faces the front of stage (bottom) */}
       {!isShape && !isPlatform && !isCustom && (() => {
         const img = getInstrumentImage(item.type)
         if (img) {
-          // Use the preloaded SVG image
           const imgSize = Math.min(width, height) * 0.82
           const imgX = (width - imgSize) / 2
           const imgY = height / 2 - imgSize / 2 - 2
@@ -276,10 +274,9 @@ export function StageItemNode({
             <KonvaImage
               image={img}
               x={imgX}
-              y={imgY + imgSize}   // offset because scaleY=-1 flips from bottom edge
+              y={imgY}
               width={imgSize}
               height={imgSize}
-              scaleY={-1}
               opacity={isSelected ? 1 : showHover ? 0.95 : 0.88}
               listening={false}
               shadowBlur={isSelected ? 18 : showHover ? 12 : color ? 10 : 0}

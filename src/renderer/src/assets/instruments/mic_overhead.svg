@@ -1,11 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" fill="white">
-  <!-- Overhead / pencil condenser mic on boom -->
-  <!-- Pencil capsule (small cylinder) -->
-  <rect x="42" y="4" width="12" height="30" rx="6"/>
-  <!-- Boom arm going diagonally -->
-  <rect x="44" y="34" width="4" height="36" rx="2" transform="rotate(30 46 52)"/>
+  <!-- Overhead/pencil condenser mic on boom -->
+  <!-- Pencil mic capsule -->
+  <rect x="40" y="4" width="16" height="28" rx="8"/>
+  <!-- Boom arm -->
+  <rect x="40" y="32" width="8" height="38" rx="3" transform="rotate(20 44 51)"/>
   <!-- Vertical pole -->
-  <rect x="44" y="58" width="8" height="28" rx="3"/>
+  <rect x="44" y="54" width="8" height="32" rx="3"/>
   <!-- Base -->
-  <rect x="24" y="86" width="48" height="10" rx="5"/>
+  <rect x="24" y="86" width="48" height="10" rx="4"/>
 </svg>

@@ -1,9 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" fill="white">
-  <!-- Two congas side by side: tapered tall drums -->
+  <!-- Two congas: tapered tall drums, solid single color -->
   <!-- Left conga -->
-  <path d="M 8 20 C 8 16 18 14 24 14 C 30 14 38 16 38 20 L 34 82 C 34 86 30 88 24 88 C 18 88 14 86 14 82 Z"/>
-  <ellipse cx="24" cy="20" rx="14" ry="5"/>
+  <path d="M6 16 C6 12 18 10 24 10 C30 10 40 12 40 16 L36 80 C36 86 30 90 24 90 C18 90 12 86 12 80 Z"/>
+  <ellipse cx="24" cy="16" rx="16" ry="5"/>
   <!-- Right conga (slightly taller) -->
-  <path d="M 52 16 C 52 12 62 10 70 10 C 78 10 86 12 86 16 L 84 80 C 84 84 78 88 70 88 C 62 88 56 84 56 80 Z"/>
-  <ellipse cx="70" cy="16" rx="16" ry="5"/>
+  <path d="M50 12 C50 8 62 6 70 6 C78 6 88 8 88 12 L86 78 C86 84 78 90 70 90 C62 90 54 84 54 78 Z"/>
+  <ellipse cx="70" cy="12" rx="18" ry="6"/>
 </svg>

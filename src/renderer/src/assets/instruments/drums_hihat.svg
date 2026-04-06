@@ -1,9 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" fill="white">
-  <!-- Hi-hat: two cymbals on stand -->
-  <ellipse cx="48" cy="22" rx="40" ry="10"/>
+  <!-- Hi-hat: two cymbals + stand -->
+  <ellipse cx="48" cy="20" rx="40" ry="10"/>
   <ellipse cx="48" cy="34" rx="40" ry="10"/>
-  <!-- Stand rod -->
   <rect x="45" y="44" width="6" height="36" rx="2"/>
-  <!-- Base pedal -->
-  <rect x="20" y="80" width="56" height="12" rx="4"/>
+  <rect x="22" y="80" width="52" height="10" rx="4"/>
 </svg>
