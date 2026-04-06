@@ -262,7 +262,7 @@ export function StageItemNode({
         />
       )}
 
-      {/* Body fill layer — instrument silhouette with item color */}
+      {/* Body fill layer — flat white silhouette icon */}
       {/* Icons are flipped 180° (negative scale + shifted anchor) so they face the front of stage (bottom) */}
       {!isShape && !isPlatform && !isCustom && bodyData && (
         <Path
@@ -271,16 +271,16 @@ export function StageItemNode({
           data={bodyData}
           scaleX={-iconScale}
           scaleY={-iconScale}
-          fill={color ?? '#2a2a40'}
-          opacity={color ? 0.6 : 0.5}
+          fill="rgba(255,255,255,0.92)"
+          opacity={isSelected ? 1 : showHover ? 0.95 : 0.88}
           listening={false}
-          shadowBlur={isSelected ? 14 : showHover ? 10 : color ? 6 : 3}
-          shadowColor={isSelected ? '#ffffff' : showHover ? '#ffffff' : (color ?? 'rgba(100,100,180,0.8)')}
-          shadowOpacity={isSelected ? 0.5 : showHover ? 0.35 : 0.3}
+          shadowBlur={isSelected ? 14 : showHover ? 10 : 4}
+          shadowColor="#ffffff"
+          shadowOpacity={isSelected ? 0.5 : showHover ? 0.35 : 0.15}
         />
       )}
 
-      {/* Icon: SVG path for built-in types, emoji text for custom */}
+      {/* Icon: emoji text for custom items */}
       {!isShape && !isPlatform && isCustom && (
         <Text
           x={0}
@@ -289,22 +289,6 @@ export function StageItemNode({
           text={customEmoji}
           fontSize={iconFontSize}
           align="center"
-          listening={false}
-        />
-      )}
-      {!isShape && !isPlatform && !isCustom && pathData && (
-        <Path
-          x={iconOffsetX + 24 * iconScale}
-          y={iconOffsetY + 24 * iconScale}
-          data={pathData}
-          scaleX={-iconScale}
-          scaleY={-iconScale}
-          fill="none"
-          stroke={color ? 'rgba(255,255,255,0.9)' : '#999999'}
-          strokeWidth={2 / iconScale}
-          strokeScaleEnabled={false}
-          lineCap="round"
-          lineJoin="round"
           listening={false}
         />
       )}
