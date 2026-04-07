@@ -3,15 +3,15 @@ import { Group, Line, Circle, Text } from 'react-konva'
 import type Konva from 'konva'
 import type { StageItem } from '../../../../shared/types'
 
-export const CABLE_DEFAULT_COLOR = '#cccccc'
+export const CABLE_DEFAULT_COLOR = '#4a6fa5'
 
-/** All cables default to the same neutral color — users set custom colors via the color picker */
+/** Per-type default colors — visible on the light canvas. Users can override via color picker. */
 export const CABLE_COLORS: Record<string, string> = {
-  cable_xlr: CABLE_DEFAULT_COLOR,
-  cable_trs: CABLE_DEFAULT_COLOR,
-  cable_ts: CABLE_DEFAULT_COLOR,
-  cable_midi: CABLE_DEFAULT_COLOR,
-  cable_speakon: CABLE_DEFAULT_COLOR
+  cable_xlr:     '#1a5fb4',  // blue   — balanced mic/line
+  cable_trs:     '#1e7a3c',  // green  — stereo/balanced ¼"
+  cable_ts:      '#c45200',  // orange — mono unbalanced ¼"
+  cable_midi:    '#7c3aed',  // purple — MIDI DIN
+  cable_speakon: '#b91c1c',  // red    — speaker power
 }
 
 const CABLE_LABELS: Record<string, string> = {

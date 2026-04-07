@@ -85,83 +85,87 @@ export const ICON_BODIES: Partial<Record<string, string>> = {
     'C14.8 20.1 14.4 20.5 14 20.5S13.2 20.1 13.2 19.5Z',
 
   // ── Grand Piano ───────────────────────────────────────────────────────────
-  // Based on real grand piano silhouette: tall keyboard-end on left, curved body sweeps right.
-  // Body fills y:0-17; keyboard occupies y:17-24.
-  // White key rectangles are evenodd cutouts (appear light = white keys).
-  // Dark gaps between them suggest black key positions.
+  // Body from piano_sample.svg silhouette scaled to 24×24. Keyboard y:17–24.
+  // 3-level evenodd: body(1×)=dark, keyboard strip(2×)=white, black keys(3×)=dark.
   piano_grand:
-    // Body + base (the characteristic grand piano curve from sample SVG, scaled to 24x24)
+    // Level 1 – body (grand piano curved case)
     'M24 24L0 24C0 24 0 15 0 10C0 4 6 1 10 3C13 4.5 13 9 16 10.5C19 12 24 13.5 24 17Z' +
-    // White key cutouts — 7 keys in x:0-24, y:17-24
-    'M0.3 17h2.8v7H0.3Z' +
-    'M3.75 17h2.8v7H3.75Z' +
-    'M7.2 17h2.8v7H7.2Z' +
-    'M10.6 17h2.8v7H10.6Z' +
-    'M14.05 17h2.8v7H14.05Z' +
-    'M17.5 17h2.8v7H17.5Z' +
-    'M20.9 17h2.8v7H20.9Z',
+    // Level 2 – full keyboard strip → white (all white keys visible)
+    'M0 17h24v7H0Z' +
+    // Level 3 – black key refills: C# D# F# G# A# (x positions based on 7 white keys in 24 units)
+    'M1.5 17h2v4H1.5Z' +
+    'M4.9 17h2v4H4.9Z' +
+    'M11.7 17h2v4H11.7Z' +
+    'M15.1 17h2v4H15.1Z' +
+    'M18.5 17h2v4H18.5Z',
 
   // ── Baby Grand Piano ──────────────────────────────────────────────────────
+  // Slightly more compact/rounder body than full grand. Keyboard y:18–24.
   piano_baby_grand:
-    'M23 24L0 24C0 24 0 16 0 11C0 5 5 2 9 3.5C12 5 12 9.5 15 11C18 12.5 23 14 23 18Z' +
-    'M0.3 18h2.6v6H0.3Z' +
-    'M3.5 18h2.6v6H3.5Z' +
-    'M6.7 18h2.6v6H6.7Z' +
-    'M9.9 18h2.6v6H9.9Z' +
-    'M13.1 18h2.6v6H13.1Z' +
-    'M16.3 18h2.6v6H16.3Z' +
-    'M19.5 18h2.6v6H19.5Z',
+    // Level 1 – compact body
+    'M24 24L0 24C0 24 0 16 0 11C0 5 5 2 9 3.5C12 5 12 9.5 15 11C18 12.5 24 14.5 24 18Z' +
+    // Level 2 – keyboard strip
+    'M0 18h24v6H0Z' +
+    // Level 3 – black keys
+    'M1.5 18h2v3.5H1.5Z' +
+    'M4.9 18h2v3.5H4.9Z' +
+    'M11.7 18h2v3.5H11.7Z' +
+    'M15.1 18h2v3.5H15.1Z' +
+    'M18.5 18h2v3.5H18.5Z',
 
   // ── Upright Piano ─────────────────────────────────────────────────────────
-  // Front view. Case body includes key area; white key rectangles are evenodd cutouts.
+  // Front view rectangular case. Keyboard strip y:16–23. 3-level evenodd keys.
   piano_upright:
-    // Full case
+    // Level 1 – rectangular case body
     'M3 2h18v22H3Z' +
-    // White key cutouts — 7 keys in x:3-21, y:16-23
-    'M3.2 16h2.2v7H3.2Z' +
-    'M5.7 16h2.2v7H5.7Z' +
-    'M8.2 16h2.2v7H8.2Z' +
-    'M10.7 16h2.2v7H10.7Z' +
-    'M13.2 16h2.2v7H13.2Z' +
-    'M15.7 16h2.2v7H15.7Z' +
-    'M18.2 16h2.2v7H18.2Z' +
-    // Legs
-    'M5 24h2.5v0H5Z' +
-    'M16.5 24h2.5v0H16.5Z',
+    // Level 2 – full keyboard strip (x:3–21, y:16–23)
+    'M3 16h18v7H3Z' +
+    // Level 3 – black keys (C# D# F# G# A#); white key width = 18/7 ≈ 2.57 from x=3
+    'M3.8 16h1.8v4.5H3.8Z' +
+    'M6.4 16h1.8v4.5H6.4Z' +
+    'M11.5 16h1.8v4.5H11.5Z' +
+    'M14.1 16h1.8v4.5H14.1Z' +
+    'M16.7 16h1.8v4.5H16.7Z',
 
   // ── Stage Keyboard / Synthesizer ──────────────────────────────────────────
-  // Landscape body. White key cutouts in lower section.
+  // Wide landscape body. Keyboard strip y:14–22. 3-level evenodd keys.
   keyboard:
-    // Body
-    'M1.5 7h21v16H1.5Z' +
-    // White key cutouts — 7 keys in x:1.5-22.5, y:13-22
-    'M1.7 13h2.7v9H1.7Z' +
-    'M4.7 13h2.7v9H4.7Z' +
-    'M7.7 13h2.7v9H7.7Z' +
-    'M10.7 13h2.7v9H10.7Z' +
-    'M13.7 13h2.7v9H13.7Z' +
-    'M16.7 13h2.7v9H16.7Z' +
-    'M19.7 13h2.7v9H19.7Z',
+    // Level 1 – synth body (x:1–23, y:6–23)
+    'M1 6h22v17H1Z' +
+    // Level 2 – keyboard strip (x:1–23, y:14–22)
+    'M1 14h22v8H1Z' +
+    // Level 3 – black keys (y:14–19, height 5); white key width = 22/7 ≈ 3.14 from x=1
+    'M2.2 14h1.8v5H2.2Z' +
+    'M5.3 14h1.8v5H5.3Z' +
+    'M11.6 14h1.8v5H11.6Z' +
+    'M14.8 14h1.8v5H14.8Z' +
+    'M17.9 14h1.8v5H17.9Z',
 
   // ── Organ ─────────────────────────────────────────────────────────────────
-  // Hammond-style: two manual keyboards stacked + pedal board.
+  // Hammond-style: two manual keyboards stacked + pedal board. 3-level evenodd keys on each manual.
   organ:
-    // Upper manual body
-    'M2 3h20v5.5H2Z' +
-    // Lower manual body
-    'M2 10h20v5.5H2Z' +
+    // Upper manual — Level 1 body (y:3–9)
+    'M2 3h20v6H2Z' +
+    // Upper manual — Level 2 keyboard strip (y:5.5–9)
+    'M2 5.5h20v3.5H2Z' +
+    // Upper manual — Level 3 black keys (y:5.5–8.5, height 3); white key width = 20/7 ≈ 2.86 from x=2
+    'M3.0 5.5h1.8v3H3.0Z' +
+    'M5.9 5.5h1.8v3H5.9Z' +
+    'M11.6 5.5h1.8v3H11.6Z' +
+    'M14.4 5.5h1.8v3H14.4Z' +
+    'M17.3 5.5h1.8v3H17.3Z' +
+    // Lower manual — Level 1 body (y:10.5–16.5)
+    'M2 10.5h20v6H2Z' +
+    // Lower manual — Level 2 keyboard strip (y:13–16.5)
+    'M2 13h20v3.5H2Z' +
+    // Lower manual — Level 3 black keys (y:13–16, height 3)
+    'M3.0 13h1.8v3H3.0Z' +
+    'M5.9 13h1.8v3H5.9Z' +
+    'M11.6 13h1.8v3H11.6Z' +
+    'M14.4 13h1.8v3H14.4Z' +
+    'M17.3 13h1.8v3H17.3Z' +
     // Pedal board
-    'M4 17.5h16v4.5H4Z' +
-    // White key cutouts — upper manual (4 keys in x:2-22, y:3-8.5)
-    'M2.3 3h4.2v5.5H2.3Z' +
-    'M7 3h4.2v5.5H7Z' +
-    'M11.8 3h4.2v5.5H11.8Z' +
-    'M16.6 3h4.2v5.5H16.6Z' +
-    // White key cutouts — lower manual
-    'M2.3 10h4.2v5.5H2.3Z' +
-    'M7 10h4.2v5.5H7Z' +
-    'M11.8 10h4.2v5.5H11.8Z' +
-    'M16.6 10h4.2v5.5H16.6Z',
+    'M4 18.5h16v3.5H4Z',
 
   // ── Drums (top-down kit view) ─────────────────────────────────────────────
   // Kick drum centre, snare front-left, two rack toms above, floor tom right,
@@ -473,16 +477,17 @@ export const ICON_PATHS: Record<string, string> = {}
  * Positive = clockwise. Applied on top of the 180° stage-facing flip.
  */
 export const ICON_PRESET_ROTATION: Partial<Record<string, number>> = {
-  guitar_acoustic: -30,
-  guitar_electric: -35,
-  guitar_classical: -30,
-  bass_electric: -30,
-  bass_upright: -20,
-  guitar: -30,
-  bass: -30,
-  wind_saxophone: -30,
-  wind_trombone: -25,
+  // Hanging instruments: after 180° stage-flip the neck points down.
+  // Rotating +135° in Konva (clockwise) swings the neck to upper-right →
+  // diagonal from bottom-left (body) to top-right (neck/headstock).
+  guitar_acoustic: -135,
+  guitar_electric: -135,
+  guitar_classical: -135,
+  bass_electric: -135,
+  bass_upright: -135,
+  guitar: -135,
+  bass: -135,
+  wind_saxophone: -135,
+  wind_trombone: -120,
   wind_flute: 20,
-  microphone: -12,
-  mic_stand: -8,
 }

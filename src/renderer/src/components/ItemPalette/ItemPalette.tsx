@@ -383,6 +383,13 @@ function CategorySection({ label, isOpen, onToggle, children }: CategorySectionP
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
+/** Tracks the last-placed item so rapid clicks stack items below each other instead of overlapping. */
+const lastPlacedRef = { x: 120, y: 120, h: 60, time: 0 }
+const STACK_TIMEOUT_MS = 10_000
+const STACK_GAP = 12
+const STACK_DEFAULT_X = 120
+const STACK_DEFAULT_Y = 120
+
 export function ItemPalette(): JSX.Element {
   const { t } = useTranslation()
   const { activeProject, addItem } = useProjectStore()
@@ -436,18 +443,35 @@ export function ItemPalette(): JSX.Element {
           ? { fontSize: 16, fontStyle: 'normal' }
           : null
 
+    // If placed within STACK_TIMEOUT_MS of the previous item, stack below it; otherwise reset
+    const now = Date.now()
+    let px: number, py: number
+    if (now - lastPlacedRef.time < STACK_TIMEOUT_MS) {
+      px = lastPlacedRef.x
+      py = lastPlacedRef.y + lastPlacedRef.h + STACK_GAP
+    } else {
+      px = STACK_DEFAULT_X
+      py = STACK_DEFAULT_Y
+    }
+    lastPlacedRef.x = px
+    lastPlacedRef.y = py
+    lastPlacedRef.h = size.h > 0 ? size.h : 4  // cables have h=0; give them a small slot
+    lastPlacedRef.time = now
+
     addItem({
       id: generateId(),
       project_id: activeProject.id,
       type,
       label,
-      x: 120,
-      y: 120,
+      x: px,
+      y: py,
       rotation: 0,
       width: size.w,
       height: size.h,
       color: color !== undefined ? color : null,
-      extra: itemExtra,
+      extra: isCable
+        ? { fromId: null, toId: null, x2: px + size.w, y2: py }
+        : itemExtra,
       sort_order: Date.now()
     })
   }

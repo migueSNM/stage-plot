@@ -84,8 +84,6 @@ const LOCK_PATH = 'M5 11V7a4 4 0 0 1 8 0v4M3 11h12v8H3zM9 15v2'
 interface StageItemNodeProps {
   item: StageItem
   isSelected: boolean
-  labelColor: string
-  selectedLabelColor: string
   nodeRef: (node: Konva.Group | null) => void
   onSelect: (e: Konva.KonvaEventObject<MouseEvent>) => void
   onDragStart: (e: Konva.KonvaEventObject<MouseEvent>) => void
@@ -98,8 +96,6 @@ interface StageItemNodeProps {
 export function StageItemNode({
   item,
   isSelected,
-  labelColor,
-  selectedLabelColor,
   nodeRef,
   onSelect,
   onDragStart,
@@ -301,18 +297,6 @@ export function StageItemNode({
         />
       )}
 
-      {/* Label */}
-      <Text
-        x={-12}
-        y={isPlatform ? height + 3 : height + 5}
-        width={width + 24}
-        text={item.label}
-        fontSize={11}
-        fill={isSelected ? selectedLabelColor : labelColor}
-        align="center"
-        fontStyle={isSelected ? 'bold' : 'normal'}
-        listening={false}
-      />
 
       {/* Layer lock badge — shown in top-right corner when locked */}
       {isLayerLocked && (
