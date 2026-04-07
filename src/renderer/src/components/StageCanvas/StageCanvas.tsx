@@ -4,7 +4,6 @@ import type Konva from 'konva'
 import { jsPDF } from 'jspdf'
 import { useTranslation } from 'react-i18next'
 import { useProjectStore } from '../../store/useProjectStore'
-import { usePrefsStore } from '../../store/usePrefsStore'
 import { StageItemNode } from './StageItemNode'
 import { CableNode } from './CableNode'
 import type { PortSide } from './CableNode'
@@ -23,22 +22,12 @@ const CABLE_TYPES = new Set([
 ])
 
 const CANVAS_COLORS = {
-  dark: {
-    bg: '#0d0d1a',
-    grid: '#1a1a30',
-    stageBorder: '#222248',
-    stageText: '#2e2e5a',
-    label: '#b0b0c8',
-    labelSelected: '#ffffff'
-  },
-  light: {
-    bg: '#edf0fa',
-    grid: '#d4d8ee',
-    stageBorder: '#9090bb',
-    stageText: '#a0a0cc',
-    label: '#4a4a72',
-    labelSelected: '#1a1a2e'
-  }
+  bg: '#f0f2fa',
+  grid: '#d4d8ee',
+  stageBorder: '#9090bb',
+  stageText: '#a0a0cc',
+  label: '#3a3a5a',
+  labelSelected: '#1a1a2e'
 }
 
 function clamp(v: number, min: number, max: number): number {
@@ -65,8 +54,7 @@ interface StageCanvasProps {
 
 export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
   const { t } = useTranslation()
-  const theme = usePrefsStore((s) => s.theme)
-  const colors = CANVAS_COLORS[theme]
+  const colors = CANVAS_COLORS
 
   const stageRef = useRef<Konva.Stage>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -173,11 +161,8 @@ export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
   // Derived values
   const singleSelected =
     selectedIds.length === 1 ? (items.find((i) => i.id === selectedIds[0]) ?? null) : null
-  const isSelectedShape =
-    singleSelected?.type === 'rectangle' ||
-    singleSelected?.type === 'circle' ||
-    singleSelected?.type === 'text' ||
-    singleSelected?.type === 'platform'
+  // All non-cable items support resize; cables don't
+  const isSelectedShape = singleSelected !== null && !CABLE_TYPES.has(singleSelected.type)
 
   // ── Attach Transformer to selected nodes ──────────────────────────────────
 
@@ -552,21 +537,28 @@ export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
       const item = latest.find((i) => i.id === id)
       if (!item) continue
 
-      const isShape =
-        item.type === 'rectangle' || item.type === 'circle' || item.type === 'text' || item.type === 'platform'
-      if (isShape && ids.length === 1) {
-        const newWidth = Math.max(20, item.width * node.scaleX())
-        const newHeight = Math.max(20, item.height * node.scaleY())
+      if (ids.length === 1) {
+        const sx = node.scaleX()
+        const sy = node.scaleY()
+        const newWidth = Math.max(20, item.width * sx)
+        const newHeight = Math.max(20, item.height * sy)
         node.scaleX(1)
         node.scaleY(1)
-        updatedItems.push({
+        const baseUpdate = {
           ...item,
           x: node.x(),
           y: node.y(),
           rotation: node.rotation(),
           width: newWidth,
           height: newHeight
-        })
+        }
+        if (item.type === 'text') {
+          const prevFontSize = ((item.extra as Record<string, unknown> | null)?.fontSize as number) ?? 16
+          const newFontSize = Math.max(6, Math.round(prevFontSize * sy))
+          updatedItems.push({ ...baseUpdate, extra: { ...(item.extra as object), fontSize: newFontSize } })
+        } else {
+          updatedItems.push(baseUpdate)
+        }
       } else {
         updatedItems.push({ ...item, x: node.x(), y: node.y(), rotation: node.rotation() })
       }
@@ -1094,8 +1086,6 @@ export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
                   key={item.id}
                   item={item}
                   isSelected={selectedIds.includes(item.id)}
-                  labelColor={colors.label}
-                  selectedLabelColor={colors.labelSelected}
                   nodeRef={(node) => {
                     if (node) nodeRefs.current.set(item.id, node)
                     else nodeRefs.current.delete(item.id)
@@ -1115,7 +1105,7 @@ export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
                     if (!selectedIds.includes(item.id)) setSelectedIds([item.id])
                     setContextMenu({ x, y, itemId: item.id })
                   }}
-                  onDblClick={() => startEditing(item)}
+                  onDblClick={() => {}}
                 />
               )
             })}
@@ -1137,15 +1127,21 @@ export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
           <Transformer
             ref={trRef}
             resizeEnabled={isSelectedShape || backgroundSelected}
-            keepRatio={singleSelected?.type === 'circle' || backgroundSelected}
+            keepRatio={
+              backgroundSelected ||
+              // Rectangles and platforms are the only free-form shapes; everything else keeps ratio
+              (singleSelected !== null &&
+                singleSelected.type !== 'rectangle' &&
+                singleSelected.type !== 'platform')
+            }
             rotateEnabled={true}
             rotationSnaps={[0, 90, 180, 270]}
             rotationSnapTolerance={10}
-            borderStroke={theme === 'dark' ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.25)'}
+            borderStroke='rgba(0,0,0,0.25)'
             borderStrokeWidth={1}
             borderDash={[4, 4]}
-            anchorStroke={theme === 'dark' ? '#ffffff' : '#333333'}
-            anchorFill={theme === 'dark' ? '#1a1a2e' : '#ffffff'}
+            anchorStroke='#333333'
+            anchorFill='#ffffff'
             anchorSize={10}
             rotateAnchorOffset={28}
             onTransformEnd={handleTransformEnd}
@@ -1194,15 +1190,19 @@ export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
         >
           {selectedIds.length === 1 && contextMenuItem && !isCableType(contextMenuItem.type) && (
             <>
-              <button
-                className="w-full text-left px-4 py-2 text-sm hover:bg-surface-2 transition-colors flex items-center gap-2"
-                onClick={() => {
-                  if (contextMenuItem) startEditing(contextMenuItem)
-                }}
-              >
-                ✏️ {t('contextMenu.rename')}
-              </button>
-              <div className="h-px bg-border mx-2 my-1" />
+              {contextMenuItem.type === 'text' && (
+                <>
+                  <button
+                    className="w-full text-left px-4 py-2 text-sm hover:bg-surface-2 transition-colors flex items-center gap-2"
+                    onClick={() => {
+                      if (contextMenuItem) startEditing(contextMenuItem)
+                    }}
+                  >
+                    ✏️ {t('contextMenu.rename')}
+                  </button>
+                  <div className="h-px bg-border mx-2 my-1" />
+                </>
+              )}
               <button
                 className="w-full text-left px-4 py-2 text-sm hover:bg-surface-2 transition-colors flex items-center gap-2"
                 onClick={() => rotateSelected(90)}
@@ -1281,7 +1281,7 @@ export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
 
       {/* Hint bar */}
       {selectedIds.length > 0 && !editingId && !contextMenu && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-xs text-muted bg-surface/80 px-3 py-1.5 rounded-full pointer-events-none select-none whitespace-nowrap">
+        <div className="absolute top-3 left-1/2 -translate-x-1/2 text-xs text-muted bg-surface/80 px-3 py-1.5 rounded-full pointer-events-none select-none whitespace-nowrap">
           {selectedIds.length === 1
             ? t('canvas.hint')
             : t('canvas.hintMulti', { count: selectedIds.length })}

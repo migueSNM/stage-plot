@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Group, Rect, Circle, Text, Path } from 'react-konva'
 import type Konva from 'konva'
 import type { StageItem, StageItemType } from '../../../../shared/types'
-import { ICON_PATHS, ICON_BODIES } from '../../assets/icons/iconPaths'
+import { ICON_BODIES, ICON_PRESET_ROTATION } from '../../assets/icons/iconPaths'
 
 export const LABEL_HEIGHT = 22
 
@@ -84,8 +84,6 @@ const LOCK_PATH = 'M5 11V7a4 4 0 0 1 8 0v4M3 11h12v8H3zM9 15v2'
 interface StageItemNodeProps {
   item: StageItem
   isSelected: boolean
-  labelColor: string
-  selectedLabelColor: string
   nodeRef: (node: Konva.Group | null) => void
   onSelect: (e: Konva.KonvaEventObject<MouseEvent>) => void
   onDragStart: (e: Konva.KonvaEventObject<MouseEvent>) => void
@@ -98,8 +96,6 @@ interface StageItemNodeProps {
 export function StageItemNode({
   item,
   isSelected,
-  labelColor,
-  selectedLabelColor,
   nodeRef,
   onSelect,
   onDragStart,
@@ -119,20 +115,20 @@ export function StageItemNode({
   const showHover = isHovered && !isSelected
 
   // Platform gets a distinct fill style (muted stage-surface look)
-  const platformFill = color ?? 'rgba(60,60,90,0.6)'
+  const platformFill = color ?? 'rgba(80, 80, 130, 0.35)'
 
   // Shapes always show their border (they ARE the border); instruments only on hover/select
   const effectiveStroke = isSelected
-    ? '#ffffff'
+    ? '#1a1a2e'
     : showHover
-      ? 'rgba(255,255,255,0.55)'
+      ? 'rgba(0,0,0,0.4)'
       : isShape
-        ? (color ?? '#888888')
+        ? (color ?? '#333333')
         : 'transparent'
 
   // SVG path data for this item type (if available)
-  const pathData = ICON_PATHS[item.type]
   const bodyData = ICON_BODIES[item.type]
+  const iconPresetRotation = ICON_PRESET_ROTATION[item.type] ?? 0
 
   // For custom items the emoji is stored in extra.emoji
   const customEmoji = isCustom ? ((item.extra?.emoji as string) ?? '⭐') : undefined
@@ -214,9 +210,9 @@ export function StageItemNode({
             opacity={isSelected ? 0.9 : showHover ? 0.8 : 0.65}
             cornerRadius={3}
             shadowBlur={isSelected ? 16 : showHover ? 8 : 4}
-            shadowColor={isSelected ? '#ffffff' : '#000000'}
+            shadowColor={isSelected ? '#1a1a2e' : '#556677'}
             shadowOpacity={isSelected ? 0.4 : showHover ? 0.3 : 0.2}
-            stroke={isSelected ? '#ffffff' : showHover ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.2)'}
+            stroke={isSelected ? '#1a1a2e' : showHover ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.15)'}
             strokeWidth={isSelected ? 2 : 1.5}
           />
           {/* Subtle grid lines to suggest platform surface */}
@@ -262,25 +258,33 @@ export function StageItemNode({
         />
       )}
 
-      {/* Body fill layer — instrument silhouette with item color */}
+      {/* Body fill layer — dark icon for light-mode canvas */}
       {/* Icons are flipped 180° (negative scale + shifted anchor) so they face the front of stage (bottom) */}
       {!isShape && !isPlatform && !isCustom && bodyData && (
-        <Path
-          x={iconOffsetX + 24 * iconScale}
-          y={iconOffsetY + 24 * iconScale}
-          data={bodyData}
-          scaleX={-iconScale}
-          scaleY={-iconScale}
-          fill={color ?? '#2a2a40'}
-          opacity={color ? 0.6 : 0.5}
+        <Group
+          x={iconOffsetX + 12 * iconScale}
+          y={iconOffsetY + 12 * iconScale}
+          rotation={iconPresetRotation}
           listening={false}
-          shadowBlur={isSelected ? 14 : showHover ? 10 : color ? 6 : 3}
-          shadowColor={isSelected ? '#ffffff' : showHover ? '#ffffff' : (color ?? 'rgba(100,100,180,0.8)')}
-          shadowOpacity={isSelected ? 0.5 : showHover ? 0.35 : 0.3}
-        />
+        >
+          <Path
+            x={12 * iconScale}
+            y={12 * iconScale}
+            data={bodyData}
+            scaleX={-iconScale}
+            scaleY={-iconScale}
+            fill={color ?? 'rgba(20,20,40,0.88)'}
+            fillRule="evenodd"
+            opacity={isSelected ? 1 : showHover ? 0.95 : 0.88}
+            listening={false}
+            shadowBlur={isSelected ? 10 : showHover ? 6 : 0}
+            shadowColor="rgba(0,0,0,0.4)"
+            shadowOpacity={isSelected ? 0.5 : showHover ? 0.3 : 0}
+          />
+        </Group>
       )}
 
-      {/* Icon: SVG path for built-in types, emoji text for custom */}
+      {/* Icon: emoji text for custom items */}
       {!isShape && !isPlatform && isCustom && (
         <Text
           x={0}
@@ -292,35 +296,7 @@ export function StageItemNode({
           listening={false}
         />
       )}
-      {!isShape && !isPlatform && !isCustom && pathData && (
-        <Path
-          x={iconOffsetX + 24 * iconScale}
-          y={iconOffsetY + 24 * iconScale}
-          data={pathData}
-          scaleX={-iconScale}
-          scaleY={-iconScale}
-          fill="none"
-          stroke={color ? 'rgba(255,255,255,0.9)' : '#999999'}
-          strokeWidth={2 / iconScale}
-          strokeScaleEnabled={false}
-          lineCap="round"
-          lineJoin="round"
-          listening={false}
-        />
-      )}
 
-      {/* Label */}
-      <Text
-        x={-12}
-        y={isPlatform ? height + 3 : height + 5}
-        width={width + 24}
-        text={item.label}
-        fontSize={11}
-        fill={isSelected ? selectedLabelColor : labelColor}
-        align="center"
-        fontStyle={isSelected ? 'bold' : 'normal'}
-        listening={false}
-      />
 
       {/* Layer lock badge — shown in top-right corner when locked */}
       {isLayerLocked && (
@@ -338,7 +314,7 @@ export function StageItemNode({
             scaleX={badgeScale}
             scaleY={badgeScale}
             fill="none"
-            stroke="rgba(255,220,50,0.9)"
+            stroke="rgba(180,80,0,0.9)"
             strokeWidth={2.5 / badgeScale}
             strokeScaleEnabled={false}
             lineCap="round"

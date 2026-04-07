@@ -10,27 +10,22 @@ export interface CustomItemDef {
 }
 
 interface PrefsStore {
-  theme: 'dark' | 'light'
   language: 'en' | 'es'
   customItems: CustomItemDef[]
-  setTheme: (theme: 'dark' | 'light') => void
   setLanguage: (lang: 'en' | 'es') => void
   addCustomItem: (def: Omit<CustomItemDef, 'id'>) => void
   updateCustomItem: (id: string, updates: Partial<Omit<CustomItemDef, 'id'>>) => void
   deleteCustomItem: (id: string) => void
 }
 
+// Always light mode
+document.documentElement.dataset.theme = 'light'
+
 export const usePrefsStore = create(
   persist<PrefsStore>(
     (set) => ({
-      theme: 'dark',
       language: 'en',
       customItems: [],
-
-      setTheme: (theme) => {
-        document.documentElement.dataset.theme = theme
-        set({ theme })
-      },
 
       setLanguage: (language) => {
         i18n.changeLanguage(language)
@@ -56,7 +51,7 @@ export const usePrefsStore = create(
       name: 'stage-plot-prefs',
       onRehydrateStorage: () => (state) => {
         if (!state) return
-        document.documentElement.dataset.theme = state.theme
+        document.documentElement.dataset.theme = 'light'
         i18n.changeLanguage(state.language)
       }
     }
