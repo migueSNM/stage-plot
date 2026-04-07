@@ -12,7 +12,7 @@ function clamp(v: number, min: number, max: number): number {
 
 export function Toolbar(): JSX.Element {
   const { t } = useTranslation()
-  const { theme, language, setTheme, setLanguage } = usePrefsStore()
+  const { language, setLanguage } = usePrefsStore()
   const {
     projects,
     activeProject,
@@ -313,14 +313,6 @@ export function Toolbar(): JSX.Element {
                        cursor-pointer font-mono text-muted hover:text-white"
           >
             {language.toUpperCase()}
-          </button>
-          <button
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            title={t('toolbar.theme')}
-            className="text-sm w-8 h-8 flex items-center justify-center rounded
-                       hover:bg-surface-2 transition-colors cursor-pointer"
-          >
-            {theme === 'dark' ? '☀️' : '🌙'}
           </button>
         </div>
       </header>

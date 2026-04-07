@@ -85,71 +85,83 @@ export const ICON_BODIES: Partial<Record<string, string>> = {
     'C14.8 20.1 14.4 20.5 14 20.5S13.2 20.1 13.2 19.5Z',
 
   // ── Grand Piano ───────────────────────────────────────────────────────────
-  // Top-down bird's-eye view: keyboard strip on left, curved body sweeps right.
-  // The cubic-bezier with both control-points at x=23 creates the characteristic
-  // "wing" shape of a grand piano case.
+  // Based on real grand piano silhouette: tall keyboard-end on left, curved body sweeps right.
+  // Body fills y:0-17; keyboard occupies y:17-24.
+  // White key rectangles are evenodd cutouts (appear light = white keys).
+  // Dark gaps between them suggest black key positions.
   piano_grand:
-    // keyboard spine (left strip)
-    'M2 4.5h3v15H2Z' +
-    // curved body (one cubic bezier — the defining grand-piano silhouette)
-    'M5 4.5C23 4.5 23 19.5 5 19.5Z' +
-    // black key cutouts in keyboard strip (appear dark on the white fill)
-    'M2.5 7h1.5v2.5H2.5Z' +
-    'M2.5 11h1.5v2.5H2.5Z' +
-    'M2.5 15h1.5v2.5H2.5Z',
+    // Body + base (the characteristic grand piano curve from sample SVG, scaled to 24x24)
+    'M24 24L0 24C0 24 0 15 0 10C0 4 6 1 10 3C13 4.5 13 9 16 10.5C19 12 24 13.5 24 17Z' +
+    // White key cutouts — 7 keys in x:0-24, y:17-24
+    'M0.3 17h2.8v7H0.3Z' +
+    'M3.75 17h2.8v7H3.75Z' +
+    'M7.2 17h2.8v7H7.2Z' +
+    'M10.6 17h2.8v7H10.6Z' +
+    'M14.05 17h2.8v7H14.05Z' +
+    'M17.5 17h2.8v7H17.5Z' +
+    'M20.9 17h2.8v7H20.9Z',
 
   // ── Baby Grand Piano ──────────────────────────────────────────────────────
   piano_baby_grand:
-    'M2 5.5h3v13H2Z' +
-    'M5 5.5C21 5.5 21 18.5 5 18.5Z' +
-    'M2.5 8h1.5v2H2.5Z' +
-    'M2.5 12h1.5v2H2.5Z',
+    'M23 24L0 24C0 24 0 16 0 11C0 5 5 2 9 3.5C12 5 12 9.5 15 11C18 12.5 23 14 23 18Z' +
+    'M0.3 18h2.6v6H0.3Z' +
+    'M3.5 18h2.6v6H3.5Z' +
+    'M6.7 18h2.6v6H6.7Z' +
+    'M9.9 18h2.6v6H9.9Z' +
+    'M13.1 18h2.6v6H13.1Z' +
+    'M16.3 18h2.6v6H16.3Z' +
+    'M19.5 18h2.6v6H19.5Z',
 
   // ── Upright Piano ─────────────────────────────────────────────────────────
-  // Front view: tall rectangular case, keyboard with black key cutouts at bottom,
-  // two legs below.
+  // Front view. Case body includes key area; white key rectangles are evenodd cutouts.
   piano_upright:
-    // main case body
-    'M3 2h18v20H3Z' +
-    // black key cutouts (lower portion of case = keyboard area)
-    'M5.5 15h2.5v6H5.5Z' +
-    'M10 15h2.5v6H10Z' +
-    'M14.5 15h2.5v6H14.5Z' +
-    'M18.5 15h2v6H18.5Z' +
-    // legs
-    'M5 22h2.5v2.5H5Z' +
-    'M16.5 22h2.5v2.5H16.5Z',
+    // Full case
+    'M3 2h18v22H3Z' +
+    // White key cutouts — 7 keys in x:3-21, y:16-23
+    'M3.2 16h2.2v7H3.2Z' +
+    'M5.7 16h2.2v7H5.7Z' +
+    'M8.2 16h2.2v7H8.2Z' +
+    'M10.7 16h2.2v7H10.7Z' +
+    'M13.2 16h2.2v7H13.2Z' +
+    'M15.7 16h2.2v7H15.7Z' +
+    'M18.2 16h2.2v7H18.2Z' +
+    // Legs
+    'M5 24h2.5v0H5Z' +
+    'M16.5 24h2.5v0H16.5Z',
 
   // ── Stage Keyboard / Synthesizer ──────────────────────────────────────────
-  // Landscape orientation: wide body, black key cutouts, pitch/mod wheel area.
+  // Landscape body. White key cutouts in lower section.
   keyboard:
-    // main body
-    'M1.5 7.5h21v10H1.5Z' +
-    // black key cutouts (two groups of 2 — standard piano pattern)
-    'M4 7.5h2.5V14H4Z' +
-    'M8 7.5h2.5V14H8Z' +
-    'M13.5 7.5h2.5V14H13.5Z' +
-    'M17.5 7.5h2.5V14H17.5Z',
+    // Body
+    'M1.5 7h21v16H1.5Z' +
+    // White key cutouts — 7 keys in x:1.5-22.5, y:13-22
+    'M1.7 13h2.7v9H1.7Z' +
+    'M4.7 13h2.7v9H4.7Z' +
+    'M7.7 13h2.7v9H7.7Z' +
+    'M10.7 13h2.7v9H10.7Z' +
+    'M13.7 13h2.7v9H13.7Z' +
+    'M16.7 13h2.7v9H16.7Z' +
+    'M19.7 13h2.7v9H19.7Z',
 
   // ── Organ ─────────────────────────────────────────────────────────────────
   // Hammond-style: two manual keyboards stacked + pedal board.
   organ:
-    // upper manual body
+    // Upper manual body
     'M2 3h20v5.5H2Z' +
-    // lower manual body
+    // Lower manual body
     'M2 10h20v5.5H2Z' +
-    // pedal board (shorter, centred)
+    // Pedal board
     'M4 17.5h16v4.5H4Z' +
-    // black key cutouts — upper manual
-    'M4.5 3h2v3.5H4.5Z' +
-    'M8 3h2v3.5H8Z' +
-    'M13 3h2v3.5H13Z' +
-    'M16.5 3h2v3.5H16.5Z' +
-    // black key cutouts — lower manual
-    'M4.5 10h2v3.5H4.5Z' +
-    'M8 10h2v3.5H8Z' +
-    'M13 10h2v3.5H13Z' +
-    'M16.5 10h2v3.5H16.5Z',
+    // White key cutouts — upper manual (4 keys in x:2-22, y:3-8.5)
+    'M2.3 3h4.2v5.5H2.3Z' +
+    'M7 3h4.2v5.5H7Z' +
+    'M11.8 3h4.2v5.5H11.8Z' +
+    'M16.6 3h4.2v5.5H16.6Z' +
+    // White key cutouts — lower manual
+    'M2.3 10h4.2v5.5H2.3Z' +
+    'M7 10h4.2v5.5H7Z' +
+    'M11.8 10h4.2v5.5H11.8Z' +
+    'M16.6 10h4.2v5.5H16.6Z',
 
   // ── Drums (top-down kit view) ─────────────────────────────────────────────
   // Kick drum centre, snare front-left, two rack toms above, floor tom right,
@@ -454,3 +466,23 @@ export const ICON_BODIES: Partial<Record<string, string>> = {
 
 // ── Detail strokes (unused — rendering removed) ───────────────────────────
 export const ICON_PATHS: Record<string, string> = {}
+
+/**
+ * Pre-rotation angles (degrees) applied to the icon Group so that
+ * "hanging" instruments appear diagonal on the canvas, like in reference icon sets.
+ * Positive = clockwise. Applied on top of the 180° stage-facing flip.
+ */
+export const ICON_PRESET_ROTATION: Partial<Record<string, number>> = {
+  guitar_acoustic: -30,
+  guitar_electric: -35,
+  guitar_classical: -30,
+  bass_electric: -30,
+  bass_upright: -20,
+  guitar: -30,
+  bass: -30,
+  wind_saxophone: -30,
+  wind_trombone: -25,
+  wind_flute: 20,
+  microphone: -12,
+  mic_stand: -8,
+}

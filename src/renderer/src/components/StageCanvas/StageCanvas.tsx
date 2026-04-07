@@ -4,7 +4,6 @@ import type Konva from 'konva'
 import { jsPDF } from 'jspdf'
 import { useTranslation } from 'react-i18next'
 import { useProjectStore } from '../../store/useProjectStore'
-import { usePrefsStore } from '../../store/usePrefsStore'
 import { StageItemNode } from './StageItemNode'
 import { CableNode } from './CableNode'
 import type { PortSide } from './CableNode'
@@ -23,22 +22,12 @@ const CABLE_TYPES = new Set([
 ])
 
 const CANVAS_COLORS = {
-  dark: {
-    bg: '#0d0d1a',
-    grid: '#1a1a30',
-    stageBorder: '#222248',
-    stageText: '#2e2e5a',
-    label: '#b0b0c8',
-    labelSelected: '#ffffff'
-  },
-  light: {
-    bg: '#edf0fa',
-    grid: '#d4d8ee',
-    stageBorder: '#9090bb',
-    stageText: '#a0a0cc',
-    label: '#4a4a72',
-    labelSelected: '#1a1a2e'
-  }
+  bg: '#f0f2fa',
+  grid: '#d4d8ee',
+  stageBorder: '#9090bb',
+  stageText: '#a0a0cc',
+  label: '#3a3a5a',
+  labelSelected: '#1a1a2e'
 }
 
 function clamp(v: number, min: number, max: number): number {
@@ -65,8 +54,7 @@ interface StageCanvasProps {
 
 export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
   const { t } = useTranslation()
-  const theme = usePrefsStore((s) => s.theme)
-  const colors = CANVAS_COLORS[theme]
+  const colors = CANVAS_COLORS
 
   const stageRef = useRef<Konva.Stage>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -1141,11 +1129,11 @@ export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
             rotateEnabled={true}
             rotationSnaps={[0, 90, 180, 270]}
             rotationSnapTolerance={10}
-            borderStroke={theme === 'dark' ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.25)'}
+            borderStroke='rgba(0,0,0,0.25)'
             borderStrokeWidth={1}
             borderDash={[4, 4]}
-            anchorStroke={theme === 'dark' ? '#ffffff' : '#333333'}
-            anchorFill={theme === 'dark' ? '#1a1a2e' : '#ffffff'}
+            anchorStroke='#333333'
+            anchorFill='#ffffff'
             anchorSize={10}
             rotateAnchorOffset={28}
             onTransformEnd={handleTransformEnd}
