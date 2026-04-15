@@ -13,6 +13,7 @@
     "package:mac": "electron-vite build && electron-builder --mac --publish never",
     "package:win": "electron-vite build && electron-builder --win --publish never",
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
+    "build:web": "vite build --config vite.config.web.ts",
     "lint": "eslint . --ext .ts,.tsx"
   },
   "dependencies": {

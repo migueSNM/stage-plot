@@ -1,0 +1,51 @@
+name: Rotate Demo Link
+
+# Run this manually from GitHub Actions to change the demo token or expiry date
+# without pushing a new release or editing code.
+#
+# After updating the stored variables it automatically triggers a fresh deployment
+# so the new values take effect immediately.
+
+on:
+  workflow_dispatch:
+    inputs:
+      token:
+        description: 'New demo access token (leave empty to keep current token)'
+        required: false
+        default: ''
+      expires_at:
+        description: 'New expiry date in ISO 8601 format — e.g. 2026-07-15 (or a past date to revoke access)'
+        required: true
+
+permissions:
+  contents: read
+  actions: write    # needed to trigger the deploy workflow
+
+jobs:
+  rotate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update DEMO_EXPIRES_AT variable
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh variable set DEMO_EXPIRES_AT \
+            --body "${{ inputs.expires_at }}" \
+            --repo "${{ github.repository }}"
+
+      - name: Update DEMO_TOKEN variable (if provided)
+        if: ${{ inputs.token != '' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh variable set DEMO_TOKEN \
+            --body "${{ inputs.token }}" \
+            --repo "${{ github.repository }}"
+
+      - name: Re-deploy demo with new values
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh workflow run deploy-demo.yml \
+            --repo "${{ github.repository }}" \
+            --field expires_at="${{ inputs.expires_at }}"
