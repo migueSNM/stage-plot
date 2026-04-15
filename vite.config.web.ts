@@ -2,6 +2,7 @@ import { resolve } from 'path'
 import { renameSync } from 'fs'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import pkg from './package.json'
 
 /**
  * Vite config for the browser-only demo build.
@@ -34,6 +35,13 @@ export default defineConfig({
       }
     }
   ],
+
+  // Bake the version from package.json into the bundle.
+  // This means every release automatically gets the right version without
+  // relying on the CI tag name or a manually set env var.
+  define: {
+    'import.meta.env.VITE_APP_VERSION': JSON.stringify(pkg.version)
+  },
 
   resolve: {
     alias: {

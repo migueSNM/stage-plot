@@ -56,20 +56,11 @@ export default function DemoApp(): JSX.Element {
       <DemoToolbar />
 
       {/* Demo banner */}
-      <div className="flex items-center justify-center gap-3 px-4 py-1.5
+      <div className="flex items-center justify-center px-4 py-1.5
                       bg-accent/10 border-b border-accent/20 flex-shrink-0 select-none">
         <span className="text-[11px] text-white/60">
           ✨ Live demo — drag items onto the canvas, zoom, right-click for options, and try all features
         </span>
-        <a
-          href="https://github.com/migueSNM/stage-plot/releases"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-[11px] px-2.5 py-0.5 rounded bg-accent/30 text-accent/90
-                     hover:bg-accent/50 transition-colors whitespace-nowrap"
-        >
-          Download the app ↗
-        </a>
       </div>
 
       <div className="flex flex-1 overflow-hidden">
