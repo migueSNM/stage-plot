@@ -1,10 +1,10 @@
 name: Deploy Demo
 
 on:
-  # Automatically re-deploy the demo whenever a new desktop release ships
+  # Re-deploy the demo on every push to main (version bumps land here)
   push:
-    tags:
-      - 'v*'
+    branches:
+      - main
 
   # Also allows manual runs — useful for rotating the token or expiry date
   # without creating a new release.
@@ -43,10 +43,14 @@ jobs:
       - name: Install dependencies
         run: npm ci --ignore-scripts
 
+      - name: Read version from package.json
+        id: pkg
+        run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+
       - name: Build web demo
         run: npm run build:web
         env:
-          VITE_APP_VERSION: ${{ github.ref_type == 'tag' && github.ref_name || vars.DEMO_APP_VERSION || '0.0.0' }}
+          VITE_APP_VERSION: ${{ steps.pkg.outputs.version }}
           VITE_DEMO_TOKEN: ${{ vars.DEMO_TOKEN }}
           # Use the workflow_dispatch override if provided, otherwise fall back to the stored variable
           VITE_DEMO_EXPIRES_AT: ${{ inputs.expires_at != '' && inputs.expires_at || vars.DEMO_EXPIRES_AT }}
