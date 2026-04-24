@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useProjectStore } from '../../store/useProjectStore'
 import { usePrefsStore, type CustomItemDef } from '../../store/usePrefsStore'
-import { ICON_PATHS } from '../../assets/icons/iconPaths'
+import { ICON_BODIES } from '../../assets/icons/iconPaths'
 import type { StageItem, StageItemType } from '../../../../shared/types'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -105,7 +105,6 @@ const PALETTE_CATEGORIES: PaletteCategory[] = [
       { type: 'subwoofer',        tKey: 'palette.subwoofer',      iconKey: 'subwoofer' },
       { type: 'monitor',          tKey: 'palette.monitor',        iconKey: 'monitor' },
       { type: 'monitor_sidefill', tKey: 'palette.monitorSidefill',iconKey: 'monitor_sidefill' },
-      { type: 'monitor_iem',      tKey: 'palette.monitorIem',     iconKey: 'monitor_iem' },
       { type: 'di_box',           tKey: 'palette.diBox',          iconKey: 'di_box' }
     ]
   },
@@ -183,7 +182,6 @@ const DEFAULT_SIZES: Partial<Record<StageItemType, { w: number; h: number }>> & 
   subwoofer:        { w: 80, h: 80 },
   monitor:          { w: 80, h: 55 },
   monitor_sidefill: { w: 90, h: 60 },
-  monitor_iem:      { w: 60, h: 70 },
   di_box:           { w: 50, h: 50 },
   // Stage
   platform:         { w: 200, h: 120 },
@@ -207,21 +205,17 @@ function getSize(type: StageItemType): { w: number; h: number } {
 // ─── Icon component ───────────────────────────────────────────────────────────
 
 function PaletteIcon({ iconKey }: { iconKey: string }): JSX.Element {
-  const path = ICON_PATHS[iconKey]
-  if (!path) return <span className="w-5 h-5" />
+  const icon = ICON_BODIES[iconKey]
+  if (!icon) return <span className="w-5 h-5" />
   return (
     <svg
       width="18"
       height="18"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
+      viewBox={`0 0 ${icon.size} ${icon.size}`}
+      fill="currentColor"
       aria-hidden="true"
     >
-      <path d={path} />
+      <path d={icon.d} fillRule="evenodd" />
     </svg>
   )
 }
