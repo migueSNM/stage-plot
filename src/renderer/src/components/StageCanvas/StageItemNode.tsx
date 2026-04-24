@@ -3,10 +3,11 @@ import { Group, Rect, Circle, Text, Path } from 'react-konva'
 import type Konva from 'konva'
 import type { StageItem, StageItemType } from '../../../../shared/types'
 import { ICON_BODIES, ICON_PRESET_ROTATION } from '../../assets/icons/iconPaths'
+import type { IconData } from '../../assets/icons/iconPaths'
 
 export const LABEL_HEIGHT = 22
 
-// Emoji fallbacks for types not covered by ICON_PATHS
+// Emoji fallbacks shown in drag-preview (not used on canvas — canvas uses ICON_BODIES)
 export const ITEM_ICONS: Record<StageItemType, string> = {
   // People
   person: '🎤',
@@ -126,18 +127,20 @@ export function StageItemNode({
         ? (color ?? '#333333')
         : 'transparent'
 
-  // SVG path data for this item type (if available)
-  const bodyData = ICON_BODIES[item.type]
+  // SVG icon data for this item type (if available)
+  const iconData: IconData | undefined = ICON_BODIES[item.type]
   const iconPresetRotation = ICON_PRESET_ROTATION[item.type] ?? 0
 
   // For custom items the emoji is stored in extra.emoji
   const customEmoji = isCustom ? ((item.extra?.emoji as string) ?? '⭐') : undefined
 
-  // Scale the 24×24 icon path to ~82 % of the item's smaller dimension (was 0.65)
+  // Scale icon to ~82% of the item's smaller dimension; base size comes from the icon data
   const iconSize = Math.min(width, height) * 0.82
-  const iconScale = iconSize / 24
-  const iconOffsetX = (width - 24 * iconScale) / 2
-  const iconOffsetY = (height / 2) - (24 * iconScale) / 2 - 2
+  const iconBase = iconData?.size ?? 24
+  const iconScale = iconSize / iconBase
+  const iconHalf = iconBase / 2
+  const iconOffsetX = (width - iconBase * iconScale) / 2
+  const iconOffsetY = (height / 2) - (iconBase * iconScale) / 2 - 2
 
   // Font size for emoji fallback (custom items)
   const iconFontSize = Math.min(width, height) * 0.45
@@ -258,21 +261,20 @@ export function StageItemNode({
         />
       )}
 
-      {/* Body fill layer — dark icon for light-mode canvas */}
-      {/* Icons are flipped 180° (negative scale + shifted anchor) so they face the front of stage (bottom) */}
-      {!isShape && !isPlatform && !isCustom && bodyData && (
+      {/* Body fill layer — natural orientation (no flip) */}
+      {!isShape && !isPlatform && !isCustom && iconData && (
         <Group
-          x={iconOffsetX + 12 * iconScale}
-          y={iconOffsetY + 12 * iconScale}
+          x={iconOffsetX + iconHalf * iconScale}
+          y={iconOffsetY + iconHalf * iconScale}
           rotation={iconPresetRotation}
           listening={false}
         >
           <Path
-            x={12 * iconScale}
-            y={12 * iconScale}
-            data={bodyData}
-            scaleX={-iconScale}
-            scaleY={-iconScale}
+            x={-iconHalf * iconScale}
+            y={-iconHalf * iconScale}
+            data={iconData.d}
+            scaleX={iconScale}
+            scaleY={iconScale}
             fill={color ?? 'rgba(20,20,40,0.88)'}
             fillRule="evenodd"
             opacity={isSelected ? 1 : showHover ? 0.95 : 0.88}

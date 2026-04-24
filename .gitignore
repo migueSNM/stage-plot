@@ -6,3 +6,4 @@ dist-web/
 *.local
 .env
 .env.*
+samples/

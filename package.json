@@ -1,6 +1,6 @@
 {
   "name": "stage-plot",
-  "version": "0.9.1",
+  "version": "0.10.0",
   "description": "Desktop app for creating stage plots for live events",
   "main": "./out/main/index.js",
   "homepage": "./",
