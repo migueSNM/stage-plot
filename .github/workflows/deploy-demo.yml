@@ -39,6 +39,16 @@ jobs:
         with:
           node-version: 20
 
+      # Fail fast if package.json and package-lock.json are out of sync
+      - name: Check lock file is in sync
+        run: |
+          npm install --package-lock-only --ignore-scripts
+          git diff --exit-code package-lock.json || {
+            echo "❌ package-lock.json is out of sync with package.json."
+            echo "   Run 'npm install' locally and commit the updated lock file."
+            exit 1
+          }
+
       # Skip postinstall (electron-rebuild) — not needed for a browser-only build
       - name: Install dependencies
         run: npm ci --ignore-scripts
