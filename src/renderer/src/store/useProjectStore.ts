@@ -1,15 +1,7 @@
 import { create } from 'zustand'
-import type { Project, StageItem, StagePlotExportData } from '../../../shared/types'
-
-const MAX_HISTORY = 50
-
-const CABLE_TYPES = new Set([
-  'cable_xlr',
-  'cable_trs',
-  'cable_ts',
-  'cable_midi',
-  'cable_speakon'
-])
+import type { Project, StageItem, StagePlotExportData, PatchMapRow } from '../../../shared/types'
+import { getCableExtra, isLayerLocked, setLayerLocked } from '../../../shared/itemExtras'
+import { MAX_HISTORY, remapIds, applyNudgeDelta, clampHistory } from '../utils/itemUtils'
 
 interface ExportFns {
   png: (() => void) | null
@@ -20,6 +12,7 @@ interface ProjectStore {
   projects: Project[]
   activeProject: Project | null
   items: StageItem[]
+  patchRows: PatchMapRow[]
   isLoading: boolean
   undoStack: StageItem[][]
   redoStack: StageItem[][]
@@ -82,6 +75,12 @@ interface ProjectStore {
   bringToFront: (id: string) => Promise<void>
   sendToBack: (id: string) => Promise<void>
   toggleLayerLock: (id: string) => Promise<void>
+
+  // Patch map actions
+  addPatchRow: () => Promise<void>
+  updatePatchRow: (id: string, name: string) => Promise<void>
+  deletePatchRow: (id: string) => Promise<void>
+  movePatchRow: (id: string, direction: 'up' | 'down') => Promise<void>
 }
 
 function generateId(): string {
@@ -96,6 +95,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   projects: [],
   activeProject: null,
   items: [],
+  patchRows: [],
   isLoading: false,
   undoStack: [],
   redoStack: [],
@@ -170,16 +170,10 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     get().pushHistory()
     const now_ts = Date.now()
     const newItems: StageItem[] = clipboard.map((item, idx) => {
-      const extra =
-        item.extra && CABLE_TYPES.has(item.type)
-          ? {
-              ...(item.extra as Record<string, unknown>),
-              x2: ((item.extra as Record<string, unknown>).x2 as number) + 20,
-              y2: ((item.extra as Record<string, unknown>).y2 as number) + 20,
-              fromId: null,
-              toId: null
-            }
-          : item.extra
+      const cableEx = getCableExtra(item)
+      const extra = cableEx
+        ? { ...cableEx, x2: cableEx.x2 + 20, y2: cableEx.y2 + 20, fromId: null, toId: null }
+        : item.extra
       return {
         ...item,
         id: `${now_ts + idx}-${Math.random().toString(36).slice(2, 9)}`,
@@ -198,10 +192,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
 
   pushHistory: () => {
     const { items, undoStack } = get()
-    set({
-      undoStack: [...undoStack.slice(-(MAX_HISTORY - 1)), [...items]],
-      redoStack: []
-    })
+    set(clampHistory(undoStack, [...items]))
   },
 
   undo: async () => {
@@ -248,6 +239,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     set({
       activeProject: project,
       items,
+      patchRows: project.patch_map ?? [],
       undoStack: [],
       redoStack: [],
       backgroundImage: bg.imageData,
@@ -293,7 +285,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   },
 
   closeProject: () => {
-    set({ activeProject: null, items: [], undoStack: [], redoStack: [], backgroundImage: null, backgroundLocked: false, backgroundX: null, backgroundY: null, backgroundWidth: null, backgroundHeight: null })
+    set({ activeProject: null, items: [], patchRows: [], undoStack: [], redoStack: [], backgroundImage: null, backgroundLocked: false, backgroundX: null, backgroundY: null, backgroundWidth: null, backgroundHeight: null })
   },
 
   importProject: async (data) => {
@@ -310,25 +302,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     const idMap = new Map<string, string>()
     data.items.forEach((item) => idMap.set(item.id, generateId()))
 
-    const remappedItems: StageItem[] = data.items.map((item, idx) => {
-      const newId = idMap.get(item.id)!
-      let extra = item.extra
-      if (extra && CABLE_TYPES.has(item.type)) {
-        const cableExtra = extra as { fromId: string | null; toId: string | null; x2: number; y2: number }
-        extra = {
-          ...cableExtra,
-          fromId: cableExtra.fromId ? (idMap.get(cableExtra.fromId) ?? null) : null,
-          toId: cableExtra.toId ? (idMap.get(cableExtra.toId) ?? null) : null
-        }
-      }
-      return {
-        ...item,
-        id: newId,
-        project_id: newProject.id,
-        extra,
-        sort_order: idx
-      }
-    })
+    const remappedItems: StageItem[] = remapIds(data.items, idMap, newProject.id)
 
     await window.api.projects.save(newProject)
     if (remappedItems.length) await window.api.items.saveMany(remappedItems)
@@ -371,16 +345,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   // Move multiple items by delta without pushing history
   nudgeItems: async (ids, dx, dy) => {
     const { items } = get()
-    const updated = items.map((i) => {
-      if (!ids.includes(i.id)) return i
-      const base = { ...i, x: i.x + dx, y: i.y + dy }
-      // For cables, also move the free endpoint coordinates
-      if (CABLE_TYPES.has(i.type) && i.extra) {
-        const ex = i.extra as { fromId: string | null; toId: string | null; x2: number; y2: number }
-        return { ...base, extra: { ...ex, x2: ex.x2 + dx, y2: ex.y2 + dy } }
-      }
-      return base
-    })
+    const updated = applyNudgeDelta(items, ids, dx, dy)
     const toSave = updated.filter((i) => ids.includes(i.id))
     if (toSave.length) await window.api.items.saveMany(toSave)
     set({ items: updated })
@@ -431,9 +396,53 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     const { items } = get()
     const item = items.find((i) => i.id === id)
     if (!item) return
-    const currentlyLocked = !!(item.extra as Record<string, unknown> | null)?.layerLocked
-    const updated = { ...item, extra: { ...(item.extra ?? {}), layerLocked: !currentlyLocked } }
+    const updated = { ...item, extra: setLayerLocked(item, !isLayerLocked(item)) }
     await window.api.items.save(updated)
     set((s) => ({ items: s.items.map((i) => (i.id === id ? updated : i)) }))
+  },
+
+  // ── Patch map ──────────────────────────────────────────────────────────────
+
+  addPatchRow: async () => {
+    const { activeProject, patchRows } = get()
+    if (!activeProject) return
+    const newRow: PatchMapRow = { id: generateId(), name: '' }
+    const rows = [...patchRows, newRow]
+    const updated = { ...activeProject, patch_map: rows, updated_at: now() }
+    set({ patchRows: rows, activeProject: updated })
+    await window.api.projects.save(updated)
+  },
+
+  updatePatchRow: async (id, name) => {
+    const { activeProject, patchRows } = get()
+    if (!activeProject) return
+    const rows = patchRows.map((r) => (r.id === id ? { ...r, name } : r))
+    const updated = { ...activeProject, patch_map: rows, updated_at: now() }
+    set({ patchRows: rows, activeProject: updated })
+    await window.api.projects.save(updated)
+  },
+
+  deletePatchRow: async (id) => {
+    const { activeProject, patchRows } = get()
+    if (!activeProject) return
+    const rows = patchRows.filter((r) => r.id !== id)
+    const updated = { ...activeProject, patch_map: rows, updated_at: now() }
+    set({ patchRows: rows, activeProject: updated })
+    await window.api.projects.save(updated)
+  },
+
+  movePatchRow: async (id, direction) => {
+    const { activeProject, patchRows } = get()
+    if (!activeProject) return
+    const idx = patchRows.findIndex((r) => r.id === id)
+    if (idx === -1) return
+    if (direction === 'up' && idx === 0) return
+    if (direction === 'down' && idx === patchRows.length - 1) return
+    const rows = [...patchRows]
+    const swapIdx = direction === 'up' ? idx - 1 : idx + 1
+    ;[rows[idx], rows[swapIdx]] = [rows[swapIdx], rows[idx]]
+    const updated = { ...activeProject, patch_map: rows, updated_at: now() }
+    set({ patchRows: rows, activeProject: updated })
+    await window.api.projects.save(updated)
   }
 }))

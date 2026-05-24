@@ -15,10 +15,12 @@ const es = {
     zoomIn: 'Acercar',
     zoomOut: 'Alejar',
     resetZoom: 'Restablecer Zoom',
+    background: 'Fondo',
     importBg: 'Importar Imagen de Fondo',
     lockBg: 'Bloquear Fondo',
     unlockBg: 'Desbloquear Fondo',
-    removeBg: 'Eliminar Fondo'
+    removeBg: 'Eliminar Fondo',
+    inputList: 'Lista de Entradas'
   },
   projects: {
     title: 'Proyectos',
@@ -146,6 +148,12 @@ const es = {
     restart: 'Reiniciar ahora',
     installError: 'No se pudo instalar la actualización automáticamente.',
     downloadManually: 'Descargar manualmente'
+  },
+  patchMap: {
+    title: 'Lista de Entradas',
+    addRow: 'Agregar entrada',
+    empty: 'Sin entradas — haz clic en + para agregar',
+    namePlaceholder: 'Nombre de entrada…'
   }
 } as const
 

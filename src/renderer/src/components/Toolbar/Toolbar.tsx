@@ -12,7 +12,7 @@ function clamp(v: number, min: number, max: number): number {
 
 export function Toolbar(): JSX.Element {
   const { t } = useTranslation()
-  const { language, setLanguage } = usePrefsStore()
+  const { language, setLanguage, showPatchPanel, setShowPatchPanel } = usePrefsStore()
   const {
     projects,
     activeProject,
@@ -38,12 +38,14 @@ export function Toolbar(): JSX.Element {
 
   const [showProjects, setShowProjects] = useState(false)
   const [showExport, setShowExport] = useState(false)
+  const [showBackground, setShowBackground] = useState(false)
   const [newName, setNewName] = useState('')
   const [dbError, setDbError] = useState<string | null>(null)
   const [importError, setImportError] = useState<string | null>(null)
   const [importSuccess, setImportSuccess] = useState<string | null>(null)
   const [appVersion, setAppVersion] = useState('')
   const exportMenuRef = useRef<HTMLDivElement>(null)
+  const backgroundMenuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     window.api.app.getVersion().then(setAppVersion)
@@ -59,6 +61,17 @@ export function Toolbar(): JSX.Element {
     window.addEventListener('mousedown', dismiss)
     return () => window.removeEventListener('mousedown', dismiss)
   }, [showExport])
+
+  useEffect(() => {
+    if (!showBackground) return
+    function dismiss(e: MouseEvent): void {
+      if (backgroundMenuRef.current && !backgroundMenuRef.current.contains(e.target as Node)) {
+        setShowBackground(false)
+      }
+    }
+    window.addEventListener('mousedown', dismiss)
+    return () => window.removeEventListener('mousedown', dismiss)
+  }, [showBackground])
 
   async function handleOpen(): Promise<void> {
     try {
@@ -86,7 +99,7 @@ export function Toolbar(): JSX.Element {
   }
 
   async function handleImportBackground(): Promise<void> {
-    setShowExport(false)
+    setShowBackground(false)
     const dataUrl = await window.api.files.importImage()
     if (dataUrl) await setBackgroundImage(dataUrl)
   }
@@ -208,7 +221,7 @@ export function Toolbar(): JSX.Element {
               {/* Export / Import */}
               <div ref={exportMenuRef} className="relative">
                 <button
-                  onClick={() => setShowExport((v) => !v)}
+                  onClick={() => { setShowExport((v) => !v); setShowBackground(false) }}
                   className="text-xs px-3 py-1.5 rounded bg-surface-2 hover:bg-border
                              transition-colors cursor-pointer flex items-center gap-1"
                 >
@@ -225,41 +238,6 @@ export function Toolbar(): JSX.Element {
                       📂 {t('toolbar.importJson')}
                     </button>
                     <div className="h-px bg-border mx-2 my-1" />
-                    <button
-                      className="w-full text-left px-4 py-2 text-xs hover:bg-surface-2
-                                 transition-colors flex items-center gap-2 disabled:opacity-40"
-                      onClick={handleImportBackground}
-                      disabled={backgroundLocked}
-                    >
-                      🖼 {t('toolbar.importBg')}
-                    </button>
-                    {backgroundImage && (
-                      <>
-                        <button
-                          className="w-full text-left px-4 py-2 text-xs hover:bg-surface-2
-                                     transition-colors flex items-center gap-2"
-                          onClick={() => {
-                            void setBackgroundLocked(!backgroundLocked)
-                            setShowExport(false)
-                          }}
-                        >
-                          {backgroundLocked ? '🔓' : '🔒'}{' '}
-                          {t(backgroundLocked ? 'toolbar.unlockBg' : 'toolbar.lockBg')}
-                        </button>
-                        <button
-                          className="w-full text-left px-4 py-2 text-xs hover:bg-surface-2
-                                     transition-colors flex items-center gap-2 disabled:opacity-40"
-                          onClick={() => {
-                            void setBackgroundImage(null)
-                            setShowExport(false)
-                          }}
-                          disabled={backgroundLocked}
-                        >
-                          ✕ {t('toolbar.removeBg')}
-                        </button>
-                      </>
-                    )}
-                  <div className="h-px bg-border mx-2 my-1" />
                     <button
                       className="w-full text-left px-4 py-2 text-xs hover:bg-surface-2
                                  transition-colors flex items-center gap-2"
@@ -290,6 +268,69 @@ export function Toolbar(): JSX.Element {
                   </div>
                 )}
               </div>
+
+              {/* Background */}
+              <div ref={backgroundMenuRef} className="relative">
+                <button
+                  onClick={() => { setShowBackground((v) => !v); setShowExport(false) }}
+                  className={`text-xs px-3 py-1.5 rounded transition-colors cursor-pointer flex items-center gap-1
+                    ${backgroundImage ? 'bg-surface-2 hover:bg-border ring-1 ring-inset ring-white/20' : 'bg-surface-2 hover:bg-border'}`}
+                >
+                  {t('toolbar.background')}
+                  {backgroundImage && <span className="w-1.5 h-1.5 rounded-full bg-blue-400 ml-0.5" />}
+                  <span className="opacity-50 text-[10px]">▾</span>
+                </button>
+                {showBackground && (
+                  <div className="absolute top-full left-0 mt-1 bg-surface border border-border
+                                  rounded-lg shadow-2xl py-1 min-w-48 z-50 overflow-hidden">
+                    <button
+                      className="w-full text-left px-4 py-2 text-xs hover:bg-surface-2
+                                 transition-colors flex items-center gap-2 disabled:opacity-40"
+                      onClick={handleImportBackground}
+                      disabled={backgroundLocked}
+                    >
+                      🖼 {t('toolbar.importBg')}
+                    </button>
+                    {backgroundImage && (
+                      <>
+                        <button
+                          className="w-full text-left px-4 py-2 text-xs hover:bg-surface-2
+                                     transition-colors flex items-center gap-2"
+                          onClick={() => {
+                            void setBackgroundLocked(!backgroundLocked)
+                            setShowBackground(false)
+                          }}
+                        >
+                          {backgroundLocked ? '🔓' : '🔒'}{' '}
+                          {t(backgroundLocked ? 'toolbar.unlockBg' : 'toolbar.lockBg')}
+                        </button>
+                        <button
+                          className="w-full text-left px-4 py-2 text-xs hover:bg-surface-2
+                                     transition-colors flex items-center gap-2 disabled:opacity-40"
+                          onClick={() => {
+                            void setBackgroundImage(null)
+                            setShowBackground(false)
+                          }}
+                          disabled={backgroundLocked}
+                        >
+                          ✕ {t('toolbar.removeBg')}
+                        </button>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="w-px h-5 bg-border mx-1" />
+
+              {/* Input List panel toggle */}
+              <button
+                onClick={() => setShowPatchPanel(!showPatchPanel)}
+                className={`text-xs px-3 py-1.5 rounded transition-colors cursor-pointer
+                  ${showPatchPanel ? 'bg-accent/20 text-accent hover:bg-accent/30' : 'bg-surface-2 hover:bg-border'}`}
+              >
+                {t('toolbar.inputList')}
+              </button>
 
               <span className="text-sm font-medium text-white/60 ml-2 truncate max-w-48">
                 {activeProject.name}

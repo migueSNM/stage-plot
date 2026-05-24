@@ -15,10 +15,12 @@ const en = {
     zoomIn: 'Zoom In',
     zoomOut: 'Zoom Out',
     resetZoom: 'Reset Zoom',
+    background: 'Background',
     importBg: 'Import Background Image',
     lockBg: 'Lock Background',
     unlockBg: 'Unlock Background',
-    removeBg: 'Remove Background'
+    removeBg: 'Remove Background',
+    inputList: 'Input List'
   },
   projects: {
     title: 'Projects',
@@ -146,6 +148,12 @@ const en = {
     restart: 'Restart now',
     installError: 'Could not install update automatically.',
     downloadManually: 'Download manually'
+  },
+  patchMap: {
+    title: 'Input List',
+    addRow: 'Add input',
+    empty: 'No inputs yet — click + to add',
+    namePlaceholder: 'Input name…'
   }
 } as const
 

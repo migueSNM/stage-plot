@@ -1,44 +1,21 @@
-import { useRef, useCallback, useEffect, useLayoutEffect, useState } from 'react'
-import { Stage, Layer, Rect, Text, Transformer, Circle, Image as KonvaImage } from 'react-konva'
+import { useRef, useEffect, useLayoutEffect, useState } from 'react'
+import { Stage, Layer, Rect, Transformer, Circle, Image as KonvaImage } from 'react-konva'
 import type Konva from 'konva'
-import { jsPDF } from 'jspdf'
 import { useTranslation } from 'react-i18next'
 import { useProjectStore } from '../../store/useProjectStore'
 import { StageItemNode } from './StageItemNode'
 import { CableNode } from './CableNode'
-import type { PortSide } from './CableNode'
 import { TextNode } from './TextNode'
 import { ColorPickerPopover } from './ColorPickerPopover'
-import type { StageItem } from '../../../../shared/types'
-
-const GRID_SIZE = 40
-
-const CABLE_TYPES = new Set([
-  'cable_xlr',
-  'cable_trs',
-  'cable_ts',
-  'cable_midi',
-  'cable_speakon'
-])
-
-const CANVAS_COLORS = {
-  bg: '#f0f2fa',
-  grid: '#d4d8ee',
-  stageBorder: '#9090bb',
-  stageText: '#a0a0cc',
-  label: '#3a3a5a',
-  labelSelected: '#1a1a2e'
-}
-
-function clamp(v: number, min: number, max: number): number {
-  return Math.max(min, Math.min(max, v))
-}
-
-interface ContextMenu {
-  x: number
-  y: number
-  itemId: string
-}
+import { GridLayer, CANVAS_COLORS } from './GridLayer'
+import { ContextMenu, type ContextMenuData } from './ContextMenu'
+import { getCablePositions, getPortPosition } from '../../utils/cableUtils'
+import { useWheelZoom } from '../../hooks/useWheelZoom'
+import { useExportHandlers } from '../../hooks/useExportHandlers'
+import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts'
+import { useCableHandlers } from '../../hooks/useCableHandlers'
+import type { StageItem, PortSide } from '../../../../shared/types'
+import { isCableType, getCableExtra, isLayerLocked, getTextExtra } from '../../../../shared/itemExtras'
 
 interface MarqueeRect {
   x: number
@@ -65,6 +42,7 @@ export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
   const {
     items,
     activeProject,
+    patchRows,
     updateItemPosition,
     updateItem,
     nudgeItem,
@@ -144,7 +122,7 @@ export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
   const snapTargetRef = useRef<{ id: string; side: PortSide } | null>(null)
 
   const [selectedIds, setSelectedIds] = useState<string[]>([])
-  const [contextMenu, setContextMenu] = useState<ContextMenu | null>(null)
+  const [contextMenu, setContextMenu] = useState<ContextMenuData | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editText, setEditText] = useState('')
   const [marqueeStart, setMarqueeStart] = useState<{ x: number; y: number } | null>(null)
@@ -162,7 +140,37 @@ export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
   const singleSelected =
     selectedIds.length === 1 ? (items.find((i) => i.id === selectedIds[0]) ?? null) : null
   // All non-cable items support resize; cables don't
-  const isSelectedShape = singleSelected !== null && !CABLE_TYPES.has(singleSelected.type)
+  const isSelectedShape = singleSelected !== null && !isCableType(singleSelected.type)
+
+  // ── Hooks ─────────────────────────────────────────────────────────────────
+
+  useExportHandlers({ stageRef, activeProject, patchRows, registerExport })
+
+  useKeyboardShortcuts({
+    editingIdRef,
+    selectedIdsRef,
+    spaceDownRef,
+    isPanningRef,
+    arrowHeldRef,
+    deleteItems,
+    updateItem,
+    nudgeItem,
+    nudgeItems,
+    setSelectedIds,
+    setBackgroundSelected,
+    closeContextMenu: () => setContextMenu(null),
+    closeColorPicker: () => setColorPickerFor(null),
+    setPanCursor
+  })
+
+  const handleWheelZoom = useWheelZoom({ stageRef, canvasScale, canvasPos, setCanvasScale, setCanvasPos })
+
+  const { handleCableBodyDragEnd, handleEndpointDragMove, handleEndpointDragEnd } = useCableHandlers({
+    items,
+    snapTarget,
+    setSnapTarget,
+    snapTargetRef
+  })
 
   // ── Attach Transformer to selected nodes ──────────────────────────────────
 
@@ -177,7 +185,7 @@ export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
     const nodes = selectedIds
       .filter((id) => {
         const item = items.find((i) => i.id === id)
-        return item && !CABLE_TYPES.has(item.type)
+        return item && !isCableType(item.type)
       })
       .map((id) => nodeRefs.current.get(id))
       .filter((n): n is Konva.Group => !!n)
@@ -196,178 +204,6 @@ export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
       trRef.current?.getLayer()?.batchDraw()
     }
   })
-
-  // ── Export ────────────────────────────────────────────────────────────────
-
-  const exportPng = useCallback(() => {
-    if (!stageRef.current || !activeProject) return
-    const stage = stageRef.current
-    // Temporarily reset zoom so export captures full canvas at 1:1
-    const savedScaleX = stage.scaleX()
-    const savedScaleY = stage.scaleY()
-    const savedX = stage.x()
-    const savedY = stage.y()
-    stage.scaleX(1)
-    stage.scaleY(1)
-    stage.x(0)
-    stage.y(0)
-    const dataUrl = stage.toDataURL({ pixelRatio: 2 })
-    stage.scaleX(savedScaleX)
-    stage.scaleY(savedScaleY)
-    stage.x(savedX)
-    stage.y(savedY)
-    const link = document.createElement('a')
-    link.download = `${activeProject.name}.png`
-    link.href = dataUrl
-    link.click()
-  }, [activeProject])
-
-  const exportPdf = useCallback(() => {
-    if (!stageRef.current || !activeProject) return
-    const stage = stageRef.current
-    const savedScaleX = stage.scaleX()
-    const savedScaleY = stage.scaleY()
-    const savedX = stage.x()
-    const savedY = stage.y()
-    stage.scaleX(1)
-    stage.scaleY(1)
-    stage.x(0)
-    stage.y(0)
-    const w = stage.width()
-    const h = stage.height()
-    const dataUrl = stage.toDataURL({ pixelRatio: 2 })
-    stage.scaleX(savedScaleX)
-    stage.scaleY(savedScaleY)
-    stage.x(savedX)
-    stage.y(savedY)
-    const pdf = new jsPDF({
-      orientation: w > h ? 'landscape' : 'portrait',
-      unit: 'px',
-      format: [w, h],
-      hotfixes: ['px_scaling']
-    })
-    pdf.addImage(dataUrl, 'PNG', 0, 0, w, h)
-    pdf.save(`${activeProject.name}.pdf`)
-  }, [activeProject])
-
-  useEffect(() => {
-    registerExport({ png: exportPng, pdf: exportPdf })
-  }, [exportPng, exportPdf, registerExport])
-
-  // ── Keyboard shortcuts ────────────────────────────────────────────────────
-
-  useEffect(() => {
-    const ARROW_KEYS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown']
-
-    function onKeyDown(e: KeyboardEvent): void {
-      // Space — enter pan/grab mode (skip when typing in rename input)
-      if (e.key === ' ' && !e.repeat && !editingIdRef.current) {
-        e.preventDefault()
-        spaceDownRef.current = true
-        setPanCursor('grab')
-        return
-      }
-
-      if (editingIdRef.current) return
-      const ids = selectedIdsRef.current
-      const mod = e.metaKey || e.ctrlKey
-
-      // Zoom shortcuts
-      if (mod && (e.key === '=' || e.key === '+')) {
-        e.preventDefault()
-        const s = useProjectStore.getState().canvasScale
-        useProjectStore.getState().setCanvasScale(clamp(s * 1.15, 0.2, 4))
-        return
-      }
-      if (mod && e.key === '-') {
-        e.preventDefault()
-        const s = useProjectStore.getState().canvasScale
-        useProjectStore.getState().setCanvasScale(clamp(s / 1.15, 0.2, 4))
-        return
-      }
-      if (mod && e.key === '0') {
-        e.preventDefault()
-        useProjectStore.getState().setCanvasScale(1)
-        useProjectStore.getState().setCanvasPos({ x: 0, y: 0 })
-        return
-      }
-
-      // Copy / paste
-      if (mod && e.key === 'c' && ids.length > 0) {
-        e.preventDefault()
-        useProjectStore.getState().copySelected(ids)
-        return
-      }
-      if (mod && e.key === 'v') {
-        e.preventDefault()
-        useProjectStore.getState().pasteClipboard().then((newIds) => {
-          if (newIds.length) setSelectedIds(newIds)
-        })
-        return
-      }
-
-      if ((e.key === 'Delete' || e.key === 'Backspace') && ids.length > 0) {
-        e.preventDefault()
-        deleteItems(ids)
-        setSelectedIds([])
-        return
-      }
-
-      if (e.key === 'Escape') {
-        setSelectedIds([])
-        setBackgroundSelected(false)
-        setContextMenu(null)
-        setColorPickerFor(null)
-        return
-      }
-
-      // [ / ] → rotate CCW / CW; only for single selection
-      if ((e.key === '[' || e.key === ']') && ids.length === 1) {
-        e.preventDefault()
-        const item = useProjectStore.getState().items.find((i) => i.id === ids[0])
-        if (!item) return
-        const step = e.shiftKey ? 45 : 15
-        const dir = e.key === '[' ? -1 : 1
-        updateItem({ ...item, rotation: ((item.rotation ?? 0) + dir * step + 360) % 360 })
-        return
-      }
-
-      // Arrow keys → nudge selected items; Shift = 10px, default 1px
-      if (ARROW_KEYS.includes(e.key) && ids.length > 0) {
-        e.preventDefault()
-        const step = e.shiftKey ? 10 : 1
-        const dx = e.key === 'ArrowLeft' ? -step : e.key === 'ArrowRight' ? step : 0
-        const dy = e.key === 'ArrowUp' ? -step : e.key === 'ArrowDown' ? step : 0
-
-        // Push history only on the first press; held repeats skip it
-        if (!arrowHeldRef.current) {
-          useProjectStore.getState().pushHistory()
-          arrowHeldRef.current = true
-        }
-        if (ids.length === 1) {
-          nudgeItem(ids[0], dx, dy)
-        } else {
-          nudgeItems(ids, dx, dy)
-        }
-      }
-    }
-
-    function onKeyUp(e: KeyboardEvent): void {
-      if (e.key === ' ') {
-        spaceDownRef.current = false
-        if (!isPanningRef.current) setPanCursor('none')
-        return
-      }
-      if (ARROW_KEYS.includes(e.key)) arrowHeldRef.current = false
-    }
-
-    window.addEventListener('keydown', onKeyDown)
-    window.addEventListener('keyup', onKeyUp)
-    return () => {
-      window.removeEventListener('keydown', onKeyDown)
-      window.removeEventListener('keyup', onKeyUp)
-    }
-  }, [deleteItems, updateItem, nudgeItem, nudgeItems, setPanCursor])
 
   // ── Global mouseup: stop panning when button released outside stage ──────
 
@@ -410,7 +246,7 @@ export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
     } else {
       setSelectedIds([id])
       const item = useProjectStore.getState().items.find((i) => i.id === id)
-      if (item && !(item.extra as Record<string, unknown> | null)?.layerLocked) {
+      if (item && !isLayerLocked(item)) {
         void bringToFront(id)
       }
     }
@@ -463,21 +299,14 @@ export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
           const it = latest.find((i) => i.id === id)
           if (!it) return null
           const base = { ...it, x: it.x + dx, y: it.y + dy }
-          if (CABLE_TYPES.has(it.type) && it.extra) {
-            const ex = it.extra as {
-              fromId: string | null
-              toId: string | null
-              fromSide: PortSide | null
-              toSide: PortSide | null
-              x2: number
-              y2: number
-            }
+          const cableEx = getCableExtra(it)
+          if (cableEx) {
             return {
               ...base,
               extra: {
-                ...ex,
-                x2: ex.x2 + dx,
-                y2: ex.y2 + dy,
+                ...cableEx,
+                x2: cableEx.x2 + dx,
+                y2: cableEx.y2 + dy,
                 fromId: null,
                 toId: null,
                 fromSide: null,
@@ -553,9 +382,9 @@ export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
           height: newHeight
         }
         if (item.type === 'text') {
-          const prevFontSize = ((item.extra as Record<string, unknown> | null)?.fontSize as number) ?? 16
-          const newFontSize = Math.max(6, Math.round(prevFontSize * sy))
-          updatedItems.push({ ...baseUpdate, extra: { ...(item.extra as object), fontSize: newFontSize } })
+          const textEx = getTextExtra(item)
+          const newFontSize = Math.max(6, Math.round(textEx.fontSize * sy))
+          updatedItems.push({ ...baseUpdate, extra: { ...textEx, fontSize: newFontSize } })
         } else {
           updatedItems.push(baseUpdate)
         }
@@ -675,7 +504,7 @@ export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
     const { x, y, width: mw, height: mh } = marqueeRect
     const matches = items
       .filter((item) => {
-        if (CABLE_TYPES.has(item.type)) return false
+        if (isCableType(item.type)) return false
         return (
           item.x < x + mw &&
           item.x + item.width > x &&
@@ -687,36 +516,6 @@ export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
     setSelectedIds(matches)
     setMarqueeStart(null)
     setMarqueeRect(null)
-  }
-
-  // ── Zoom ──────────────────────────────────────────────────────────────────
-
-  function handleWheelZoom(e: Konva.KonvaEventObject<WheelEvent>): void {
-    e.evt.preventDefault()
-    const stage = stageRef.current
-    if (!stage) return
-    const scaleBy = 1.08
-    const oldScale = canvasScale
-    const dir = e.evt.deltaY < 0 ? 1 : -1
-    const newScale = clamp(dir > 0 ? oldScale * scaleBy : oldScale / scaleBy, 0.2, 4.0)
-    const ptr = stage.getPointerPosition()
-    if (!ptr) return
-    const mousePointTo = {
-      x: (ptr.x - canvasPos.x) / oldScale,
-      y: (ptr.y - canvasPos.y) / oldScale
-    }
-    setCanvasScale(newScale)
-    setCanvasPos({
-      x: ptr.x - mousePointTo.x * newScale,
-      y: ptr.y - mousePointTo.y * newScale
-    })
-  }
-
-  function rotateSelected(deg: number): void {
-    const item = items.find((i) => i.id === contextMenu?.itemId)
-    if (!item) return
-    updateItem({ ...item, rotation: ((item.rotation ?? 0) + deg + 360) % 360 })
-    setContextMenu(null)
   }
 
   function getEditStyle(item: StageItem): React.CSSProperties {
@@ -731,195 +530,9 @@ export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
     }
   }
 
-  // ── Cable helpers ─────────────────────────────────────────────────────────
-
-  function getPortPosition(it: StageItem, side: PortSide): { x: number; y: number } {
-    switch (side) {
-      case 'top':    return { x: it.x + it.width / 2, y: it.y }
-      case 'right':  return { x: it.x + it.width,     y: it.y + it.height / 2 }
-      case 'bottom': return { x: it.x + it.width / 2, y: it.y + it.height }
-      case 'left':   return { x: it.x,                y: it.y + it.height / 2 }
-    }
-  }
-
-  function getCablePositions(item: StageItem): {
-    fromPos: { x: number; y: number }
-    toPos: { x: number; y: number }
-  } {
-    const ex = item.extra as {
-      fromId: string | null
-      toId: string | null
-      fromSide: PortSide | null
-      toSide: PortSide | null
-      x2: number
-      y2: number
-    }
-
-    let fromPos: { x: number; y: number }
-    if (ex.fromId) {
-      const fromItem = items.find((i) => i.id === ex.fromId)
-      fromPos = fromItem
-        ? ex.fromSide
-          ? getPortPosition(fromItem, ex.fromSide)
-          : { x: fromItem.x + fromItem.width / 2, y: fromItem.y + fromItem.height / 2 }
-        : { x: item.x, y: item.y }
-    } else {
-      fromPos = { x: item.x, y: item.y }
-    }
-
-    let toPos: { x: number; y: number }
-    if (ex.toId) {
-      const toItem = items.find((i) => i.id === ex.toId)
-      toPos = toItem
-        ? ex.toSide
-          ? getPortPosition(toItem, ex.toSide)
-          : { x: toItem.x + toItem.width / 2, y: toItem.y + toItem.height / 2 }
-        : { x: ex.x2, y: ex.y2 }
-    } else {
-      toPos = { x: ex.x2, y: ex.y2 }
-    }
-
-    return { fromPos, toPos }
-  }
-
-  function handleCableBodyDragEnd(cable: StageItem, dx: number, dy: number): void {
-    const ex = cable.extra as {
-      fromId: string | null
-      toId: string | null
-      fromSide: PortSide | null
-      toSide: PortSide | null
-      x2: number
-      y2: number
-    }
-    const updated: StageItem = {
-      ...cable,
-      x: cable.x + dx,
-      y: cable.y + dy,
-      extra: {
-        fromId: null,
-        toId: null,
-        fromSide: null,
-        toSide: null,
-        x2: ex.x2 + dx,
-        y2: ex.y2 + dy
-      }
-    }
-    useProjectStore.getState().pushHistory()
-    window.api.items.save(updated)
-    useProjectStore.setState((s) => ({
-      items: s.items.map((i) => (i.id === updated.id ? updated : i))
-    }))
-  }
-
-  function handleEndpointDragMove(
-    _cable: StageItem,
-    _endpoint: 'from' | 'to',
-    x: number,
-    y: number
-  ): void {
-    const SNAP_DIST = 40
-    let nearestItemId: string | null = null
-    let nearestSide: PortSide | null = null
-    let nearestDist = Infinity
-
-    for (const it of items) {
-      if (CABLE_TYPES.has(it.type)) continue
-      const ports: Array<{ side: PortSide; px: number; py: number }> = [
-        { side: 'top',    px: it.x + it.width / 2, py: it.y },
-        { side: 'right',  px: it.x + it.width,     py: it.y + it.height / 2 },
-        { side: 'bottom', px: it.x + it.width / 2, py: it.y + it.height },
-        { side: 'left',   px: it.x,                py: it.y + it.height / 2 }
-      ]
-      for (const port of ports) {
-        const d = Math.hypot(port.px - x, port.py - y)
-        if (d < SNAP_DIST && d < nearestDist) {
-          nearestDist = d
-          nearestItemId = it.id
-          nearestSide = port.side
-        }
-      }
-    }
-
-    const newSnap =
-      nearestItemId && nearestSide ? { id: nearestItemId, side: nearestSide } : null
-    // Write ref immediately — avoids stale read in onDragEnd on quick release
-    snapTargetRef.current = newSnap
-    if (newSnap?.id !== snapTarget?.id || newSnap?.side !== snapTarget?.side) {
-      setSnapTarget(newSnap)
-    }
-  }
-
-  function handleEndpointDragEnd(
-    cable: StageItem,
-    endpoint: 'from' | 'to',
-    x: number,
-    y: number
-  ): void {
-    const snap = snapTargetRef.current
-    const ex = cable.extra as {
-      fromId: string | null
-      toId: string | null
-      fromSide: PortSide | null
-      toSide: PortSide | null
-      x2: number
-      y2: number
-    }
-
-    // Resolve the snapped port position so we store it as the free-endpoint
-    // fallback (used when the cable is later disconnected via body drag)
-    const snapItem = snap ? items.find((i) => i.id === snap.id) : null
-    const snapPos  = snapItem && snap ? getPortPosition(snapItem, snap.side) : null
-
-    let updated: StageItem
-    if (endpoint === 'from') {
-      updated = {
-        ...cable,
-        x: snapPos ? snapPos.x : x,
-        y: snapPos ? snapPos.y : y,
-        extra: { ...ex, fromId: snap?.id ?? null, fromSide: snap?.side ?? null }
-      }
-    } else {
-      updated = {
-        ...cable,
-        extra: {
-          ...ex,
-          toId:   snap?.id   ?? null,
-          toSide: snap?.side ?? null,
-          x2: snapPos ? snapPos.x : x,
-          y2: snapPos ? snapPos.y : y
-        }
-      }
-    }
-    useProjectStore.getState().pushHistory()
-    window.api.items.save(updated)
-    useProjectStore.setState((s) => ({
-      items: s.items.map((i) => (i.id === updated.id ? updated : i))
-    }))
-    snapTargetRef.current = null
-    setSnapTarget(null)
-  }
-
-  // ── Grid ──────────────────────────────────────────────────────────────────
-
-  const gridLines = useCallback(() => {
-    const lines: JSX.Element[] = []
-    for (let i = 0; i <= Math.ceil(width / GRID_SIZE); i++) {
-      lines.push(
-        <Rect key={`v${i}`} x={i * GRID_SIZE} y={0} width={1} height={height} fill={colors.grid} />
-      )
-    }
-    for (let i = 0; i <= Math.ceil(height / GRID_SIZE); i++) {
-      lines.push(
-        <Rect key={`h${i}`} x={0} y={i * GRID_SIZE} width={width} height={1} fill={colors.grid} />
-      )
-    }
-    return lines
-  }, [width, height, colors.grid])
-
   const editingItem = editingId ? items.find((i) => i.id === editingId) : null
   const colorPickerItem = colorPickerFor ? items.find((i) => i.id === colorPickerFor) : null
-  const isCableType = (type: string) => CABLE_TYPES.has(type)
-  const contextMenuItem = contextMenu ? items.find((i) => i.id === contextMenu.itemId) : null
+  const contextMenuItem = contextMenu ? items.find((i) => i.id === contextMenu.itemId) : undefined
 
   return (
     <div
@@ -947,29 +560,12 @@ export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
         onContextMenu={(e) => e.evt.preventDefault()}
       >
         {/* Grid + boundary */}
-        <Layer listening={false}>
-          <Rect x={0} y={0} width={width} height={height} fill={colors.bg} />
-          {gridLines()}
-          <Rect
-            x={GRID_SIZE}
-            y={GRID_SIZE}
-            width={width - GRID_SIZE * 2}
-            height={height - GRID_SIZE * 2}
-            stroke={colors.stageBorder}
-            strokeWidth={1.5}
-            dash={[8, 6]}
-            fill="transparent"
-          />
-          <Text
-            x={width / 2 - 70}
-            y={height - GRID_SIZE / 2 - 7}
-            text={t('canvas.frontOfStage')}
-            fontSize={11}
-            fill={colors.stageText}
-            fontStyle="bold"
-            letterSpacing={2}
-          />
-        </Layer>
+        <GridLayer
+          width={width}
+          height={height}
+          colors={colors}
+          frontOfStageLabel={t('canvas.frontOfStage')}
+        />
 
         {/* Items + Transformer */}
         <Layer>
@@ -1004,9 +600,9 @@ export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
 
           {/* Cables rendered first (always below instruments) */}
           {sortedItems
-            .filter((item) => CABLE_TYPES.has(item.type))
+            .filter((item) => isCableType(item.type))
             .map((cable) => {
-              const { fromPos, toPos } = getCablePositions(cable)
+              const { fromPos, toPos } = getCablePositions(cable, items)
               return (
                 <CableNode
                   key={cable.id}
@@ -1049,7 +645,7 @@ export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
 
           {/* Instrument + shape + text items — rendered in sort_order (lower = below) */}
           {sortedItems
-            .filter((item) => !CABLE_TYPES.has(item.type))
+            .filter((item) => !isCableType(item.type))
             .map((item) => {
               if (item.type === 'text') {
                 return (
@@ -1183,100 +779,23 @@ export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
 
       {/* Context menu */}
       {contextMenu && (
-        <div
-          className="fixed z-50 bg-surface border border-border rounded-lg shadow-2xl py-1 min-w-44 overflow-hidden"
-          style={{ left: contextMenu.x, top: contextMenu.y }}
-          onPointerDown={(e) => e.stopPropagation()}
-        >
-          {selectedIds.length === 1 && contextMenuItem && !isCableType(contextMenuItem.type) && (
-            <>
-              {contextMenuItem.type === 'text' && (
-                <>
-                  <button
-                    className="w-full text-left px-4 py-2 text-sm hover:bg-surface-2 transition-colors flex items-center gap-2"
-                    onClick={() => {
-                      if (contextMenuItem) startEditing(contextMenuItem)
-                    }}
-                  >
-                    ✏️ {t('contextMenu.rename')}
-                  </button>
-                  <div className="h-px bg-border mx-2 my-1" />
-                </>
-              )}
-              <button
-                className="w-full text-left px-4 py-2 text-sm hover:bg-surface-2 transition-colors flex items-center gap-2"
-                onClick={() => rotateSelected(90)}
-              >
-                🔃 {t('contextMenu.rotateCW')}
-              </button>
-              <button
-                className="w-full text-left px-4 py-2 text-sm hover:bg-surface-2 transition-colors flex items-center gap-2"
-                onClick={() => rotateSelected(-90)}
-              >
-                🔄 {t('contextMenu.rotateCCW')}
-              </button>
-              <div className="h-px bg-border mx-2 my-1" />
-              <button
-                className="w-full text-left px-4 py-2 text-sm hover:bg-surface-2 transition-colors flex items-center gap-2"
-                onClick={() => {
-                  setColorPickerFor(contextMenu.itemId)
-                  setContextMenu(null)
-                }}
-              >
-                🎨 {t('contextMenu.changeColor')}
-              </button>
-              <button
-                className="w-full text-left px-4 py-2 text-sm hover:bg-surface-2 transition-colors flex items-center gap-2"
-                onClick={() => { void bringToFront(contextMenu.itemId); setContextMenu(null) }}
-              >
-                ⬆️ {t('contextMenu.bringToFront')}
-              </button>
-              <button
-                className="w-full text-left px-4 py-2 text-sm hover:bg-surface-2 transition-colors flex items-center gap-2"
-                onClick={() => { void sendToBack(contextMenu.itemId); setContextMenu(null) }}
-              >
-                ⬇️ {t('contextMenu.sendToBack')}
-              </button>
-              <div className="h-px bg-border mx-2 my-1" />
-              <button
-                className="w-full text-left px-4 py-2 text-sm hover:bg-surface-2 transition-colors flex items-center gap-2"
-                onClick={() => { void toggleLayerLock(contextMenu.itemId); setContextMenu(null) }}
-              >
-                {(contextMenuItem.extra as Record<string, unknown> | null)?.layerLocked
-                  ? `🔓 ${t('contextMenu.unlockLayer')}`
-                  : `🔒 ${t('contextMenu.lockLayer')}`}
-              </button>
-              <div className="h-px bg-border mx-2 my-1" />
-            </>
-          )}
-          {selectedIds.length === 1 && contextMenuItem && isCableType(contextMenuItem.type) && (
-            <>
-              <button
-                className="w-full text-left px-4 py-2 text-sm hover:bg-surface-2 transition-colors flex items-center gap-2"
-                onClick={() => {
-                  setColorPickerFor(contextMenu.itemId)
-                  setContextMenu(null)
-                }}
-              >
-                🎨 {t('contextMenu.changeColor')}
-              </button>
-              <div className="h-px bg-border mx-2 my-1" />
-            </>
-          )}
-          <button
-            className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-surface-2 transition-colors flex items-center gap-2"
-            onClick={() => {
-              deleteItems(selectedIds)
-              setSelectedIds([])
-              setContextMenu(null)
-            }}
-          >
-            🗑{' '}
-            {selectedIds.length > 1
-              ? t('contextMenu.deleteSelected', { count: selectedIds.length })
-              : t('contextMenu.delete')}
-          </button>
-        </div>
+        <ContextMenu
+          contextMenu={contextMenu}
+          selectedIds={selectedIds}
+          contextMenuItem={contextMenuItem}
+          onStartEditing={startEditing}
+          onRotate={(deg) => {
+            const item = items.find((i) => i.id === contextMenu.itemId)
+            if (item) updateItem({ ...item, rotation: ((item.rotation ?? 0) + deg + 360) % 360 })
+            setContextMenu(null)
+          }}
+          onChangeColor={(itemId) => setColorPickerFor(itemId)}
+          onBringToFront={(id) => void bringToFront(id)}
+          onSendToBack={(id) => void sendToBack(id)}
+          onToggleLock={(id) => void toggleLayerLock(id)}
+          onDelete={(ids) => { deleteItems(ids); setSelectedIds([]) }}
+          onClose={() => setContextMenu(null)}
+        />
       )}
 
       {/* Hint bar */}

@@ -4,6 +4,7 @@ import type Konva from 'konva'
 import type { StageItem, StageItemType } from '../../../../shared/types'
 import { ICON_BODIES, ICON_PRESET_ROTATION } from '../../assets/icons/iconPaths'
 import type { IconData } from '../../assets/icons/iconPaths'
+import { isLayerLocked, getCustomExtra } from '../../../../shared/itemExtras'
 
 export const LABEL_HEIGHT = 22
 
@@ -112,7 +113,7 @@ export function StageItemNode({
   const isPlatform = item.type === 'platform'
   const isCircular = item.type === 'circle'
   const isCustom = item.type === 'custom'
-  const isLayerLocked = !!(item.extra as Record<string, unknown> | null)?.layerLocked
+  const itemLocked = isLayerLocked(item)
   const showHover = isHovered && !isSelected
 
   // Platform gets a distinct fill style (muted stage-surface look)
@@ -132,7 +133,7 @@ export function StageItemNode({
   const iconPresetRotation = ICON_PRESET_ROTATION[item.type] ?? 0
 
   // For custom items the emoji is stored in extra.emoji
-  const customEmoji = isCustom ? ((item.extra?.emoji as string) ?? '⭐') : undefined
+  const customEmoji = isCustom ? (getCustomExtra(item)?.emoji ?? '⭐') : undefined
 
   // Scale icon to ~82% of the item's smaller dimension; base size comes from the icon data
   const iconSize = Math.min(width, height) * 0.82
@@ -301,7 +302,7 @@ export function StageItemNode({
 
 
       {/* Layer lock badge — shown in top-right corner when locked */}
-      {isLayerLocked && (
+      {itemLocked && (
         <Group x={width - badgeSize - 2} y={2} listening={false}>
           <Rect
             width={badgeSize}
@@ -324,6 +325,7 @@ export function StageItemNode({
           />
         </Group>
       )}
+
     </Group>
   )
 }

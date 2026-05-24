@@ -1,3 +1,5 @@
+import fs from 'node:fs'
+import path from 'node:path'
 import Database from 'better-sqlite3'
 import { app, IpcMain } from 'electron'
 import { join } from 'path'
@@ -57,33 +59,91 @@ function migrate(db: Database.Database): void {
   try { db.exec('ALTER TABLE project_backgrounds ADD COLUMN y REAL') } catch {}
   try { db.exec('ALTER TABLE project_backgrounds ADD COLUMN width REAL') } catch {}
   try { db.exec('ALTER TABLE project_backgrounds ADD COLUMN height REAL') } catch {}
+  try { db.exec('ALTER TABLE projects ADD COLUMN patch_map TEXT') } catch {}
+
+  // v1: switch background storage from base64 in DB to files on disk.
+  // Clear all existing data so legacy base64 entries don't linger.
+  const version = (db.pragma('user_version', { simple: true }) as number) ?? 0
+  if (version < 1) {
+    db.exec('DELETE FROM stage_items; DELETE FROM project_backgrounds; DELETE FROM projects;')
+    db.pragma('user_version = 1')
+  }
 }
+
+// ─── Background file helpers ──────────────────────────────────────────────────
+
+function getBgDir(): string {
+  return path.join(app.getPath('userData'), 'stage-plot-backgrounds')
+}
+
+function extFromMime(dataUrl: string): string {
+  const mime = dataUrl.slice(5, dataUrl.indexOf(';'))
+  if (mime === 'image/jpeg') return 'jpg'
+  return 'png'
+}
+
+function dataUrlToBuffer(dataUrl: string): Buffer {
+  return Buffer.from(dataUrl.slice(dataUrl.indexOf(',') + 1), 'base64')
+}
+
+function bufferToDataUrl(buf: Buffer, ext: string): string {
+  const mime = ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' : 'image/png'
+  return `data:${mime};base64,${buf.toString('base64')}`
+}
+
+function writeBackgroundFile(projectId: string, dataUrl: string): string {
+  const ext = extFromMime(dataUrl)
+  const dir = getBgDir()
+  fs.mkdirSync(dir, { recursive: true })
+  fs.writeFileSync(path.join(dir, `${projectId}.${ext}`), dataUrlToBuffer(dataUrl))
+  return `stage-plot-backgrounds/${projectId}.${ext}`
+}
+
+function deleteBackgroundFile(projectId: string): void {
+  const dir = getBgDir()
+  for (const ext of ['png', 'jpg', 'jpeg']) {
+    const filePath = path.join(dir, `${projectId}.${ext}`)
+    if (fs.existsSync(filePath)) {
+      try { fs.unlinkSync(filePath) } catch { /* ignore */ }
+    }
+  }
+}
+
+// ─── IPC handlers ─────────────────────────────────────────────────────────────
 
 export function registerDbHandlers(ipcMain: IpcMain): void {
   // Projects
   ipcMain.handle('db:projects:list', () => {
-    return getDb().prepare('SELECT * FROM projects ORDER BY updated_at DESC').all() as Project[]
+    type DbProject = Project & { patch_map: string | null }
+    const rows = getDb().prepare('SELECT * FROM projects ORDER BY updated_at DESC').all() as DbProject[]
+    return rows.map((r) => ({ ...r, patch_map: r.patch_map ? JSON.parse(r.patch_map) : null })) as Project[]
   })
 
   ipcMain.handle('db:projects:get', (_e, id: string) => {
-    return getDb().prepare('SELECT * FROM projects WHERE id = ?').get(id) as Project | undefined
+    type DbProject = Project & { patch_map: string | null }
+    const row = getDb().prepare('SELECT * FROM projects WHERE id = ?').get(id) as DbProject | undefined
+    if (!row) return undefined
+    return { ...row, patch_map: row.patch_map ? JSON.parse(row.patch_map) : null } as Project
   })
 
   ipcMain.handle('db:projects:save', (_e, project: Project) => {
+    const patchMapJson = project.patch_map ? JSON.stringify(project.patch_map) : null
     getDb()
       .prepare(
-        `INSERT INTO projects (id, name, description, created_at, updated_at)
-         VALUES (@id, @name, @description, @created_at, @updated_at)
+        `INSERT INTO projects (id, name, description, patch_map, created_at, updated_at)
+         VALUES (@id, @name, @description, @patch_map, @created_at, @updated_at)
          ON CONFLICT(id) DO UPDATE SET
            name = excluded.name,
            description = excluded.description,
+           patch_map = excluded.patch_map,
            updated_at = excluded.updated_at`
       )
-      .run(project)
+      .run({ ...project, patch_map: patchMapJson })
     return project
   })
 
   ipcMain.handle('db:projects:delete', (_e, id: string) => {
+    deleteBackgroundFile(id)
     getDb().prepare('DELETE FROM projects WHERE id = ?').run(id)
   })
 
@@ -150,21 +210,55 @@ export function registerDbHandlers(ipcMain: IpcMain): void {
   ipcMain.handle('db:background:get', (_e, projectId: string) => {
     const row = getDb()
       .prepare('SELECT image_data, locked, x, y, width, height FROM project_backgrounds WHERE project_id = ?')
-      .get(projectId) as { image_data: string | null; locked: number; x: number | null; y: number | null; width: number | null; height: number | null } | undefined
-    if (!row) return { imageData: null, locked: false, x: null, y: null, width: null, height: null }
-    return {
-      imageData: row.image_data ?? null,
-      locked: !!row.locked,
-      x: row.x ?? null,
-      y: row.y ?? null,
-      width: row.width ?? null,
-      height: row.height ?? null
+      .get(projectId) as {
+        image_data: string | null
+        locked: number
+        x: number | null
+        y: number | null
+        width: number | null
+        height: number | null
+      } | undefined
+
+    const meta = {
+      locked: !!row?.locked,
+      x: row?.x ?? null,
+      y: row?.y ?? null,
+      width: row?.width ?? null,
+      height: row?.height ?? null
+    }
+
+    if (!row || !row.image_data) return { imageData: null, ...meta }
+
+    // Legacy base64 stored before file-based migration — discard silently
+    if (row.image_data.startsWith('data:')) return { imageData: null, ...meta }
+
+    // Normal path: read file from disk
+    try {
+      const fullPath = path.join(app.getPath('userData'), row.image_data)
+      const buf = fs.readFileSync(fullPath)
+      const ext = path.extname(row.image_data).slice(1)
+      return { imageData: bufferToDataUrl(buf, ext), ...meta }
+    } catch {
+      // File missing — clean up the stale DB entry
+      getDb()
+        .prepare('UPDATE project_backgrounds SET image_data = NULL WHERE project_id = ?')
+        .run(projectId)
+      return { imageData: null, ...meta }
     }
   })
 
   ipcMain.handle(
     'db:background:set',
     (_e, projectId: string, imageData: string | null, locked: boolean, x: number | null, y: number | null, width: number | null, height: number | null) => {
+      let storedValue: string | null
+      if (imageData === null) {
+        deleteBackgroundFile(projectId)
+        storedValue = null
+      } else if (imageData.startsWith('data:')) {
+        storedValue = writeBackgroundFile(projectId, imageData)
+      } else {
+        storedValue = imageData  // already a stored path (idempotent re-save)
+      }
       getDb()
         .prepare(
           `INSERT INTO project_backgrounds (project_id, image_data, locked, x, y, width, height)
@@ -177,7 +271,7 @@ export function registerDbHandlers(ipcMain: IpcMain): void {
              width = excluded.width,
              height = excluded.height`
         )
-        .run(projectId, imageData, locked ? 1 : 0, x, y, width, height)
+        .run(projectId, storedValue, locked ? 1 : 0, x, y, width, height)
     }
   )
 }

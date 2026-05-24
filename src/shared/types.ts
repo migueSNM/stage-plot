@@ -1,9 +1,15 @@
 // ─── Project ─────────────────────────────────────────────────────────────────
 
+export interface PatchMapRow {
+  id: string
+  name: string
+}
+
 export interface Project {
   id: string
   name: string
   description: string | null
+  patch_map?: PatchMapRow[] | null
   created_at: string
   updated_at: string
 }
@@ -78,6 +84,40 @@ export type StageItemType =
   | 'text'
   | 'custom'
 
+// ─── Extra field types ────────────────────────────────────────────────────────
+
+export type PortSide = 'top' | 'right' | 'bottom' | 'left'
+
+export interface CableExtra {
+  fromId: string | null
+  toId: string | null
+  fromSide?: PortSide | null
+  toSide?: PortSide | null
+  x2: number
+  y2: number
+}
+
+export interface TextExtra {
+  fontSize: number
+  fontStyle: 'normal' | 'bold' | 'italic'
+}
+
+export interface CustomExtra {
+  emoji: string
+  defId: string
+}
+
+export interface BaseExtra {
+  layerLocked?: boolean
+}
+
+export type ItemExtra =
+  | (CableExtra & BaseExtra)
+  | (TextExtra & BaseExtra)
+  | (CustomExtra & BaseExtra)
+  | BaseExtra
+  | null
+
 export interface StageItem {
   id: string
   project_id: string
@@ -89,7 +129,7 @@ export interface StageItem {
   width: number
   height: number
   color: string | null
-  extra: Record<string, unknown> | null
+  extra: ItemExtra
   sort_order: number
 }
 
