@@ -78,6 +78,43 @@ export type StageItemType =
   | 'text'
   | 'custom'
 
+// ─── Extra field types ────────────────────────────────────────────────────────
+
+export type PortSide = 'top' | 'right' | 'bottom' | 'left'
+
+export interface CableExtra {
+  fromId: string | null
+  toId: string | null
+  fromSide?: PortSide | null
+  toSide?: PortSide | null
+  x2: number
+  y2: number
+}
+
+export interface TextExtra {
+  fontSize: number
+  fontStyle: 'normal' | 'bold' | 'italic'
+}
+
+export interface CustomExtra {
+  emoji: string
+  defId: string
+}
+
+export interface BaseExtra {
+  layerLocked?: boolean
+  patchNumber?: number
+  inputLabel?: string
+  patchNotes?: string
+}
+
+export type ItemExtra =
+  | (CableExtra & BaseExtra)
+  | (TextExtra & BaseExtra)
+  | (CustomExtra & BaseExtra)
+  | BaseExtra
+  | null
+
 export interface StageItem {
   id: string
   project_id: string
@@ -89,7 +126,7 @@ export interface StageItem {
   width: number
   height: number
   color: string | null
-  extra: Record<string, unknown> | null
+  extra: ItemExtra
   sort_order: number
 }
 

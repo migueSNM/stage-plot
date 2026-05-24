@@ -15,10 +15,12 @@ const es = {
     zoomIn: 'Acercar',
     zoomOut: 'Alejar',
     resetZoom: 'Restablecer Zoom',
+    background: 'Fondo',
     importBg: 'Importar Imagen de Fondo',
     lockBg: 'Bloquear Fondo',
     unlockBg: 'Desbloquear Fondo',
-    removeBg: 'Eliminar Fondo'
+    removeBg: 'Eliminar Fondo',
+    inputList: 'Lista de Entradas'
   },
   projects: {
     title: 'Proyectos',
@@ -134,7 +136,8 @@ const es = {
     sendToBack: 'Enviar al Fondo',
     lockLayer: 'Bloquear Capa',
     unlockLayer: 'Desbloquear Capa',
-    deleteSelected: 'Eliminar Seleccionados ({{count}})'
+    deleteSelected: 'Eliminar Seleccionados ({{count}})',
+    editPatchInfo: 'Editar Info de Canal'
   },
   fileOps: {
     importSuccess: 'Proyecto "{{name}}" importado exitosamente',
@@ -146,6 +149,21 @@ const es = {
     restart: 'Reiniciar ahora',
     installError: 'No se pudo instalar la actualización automáticamente.',
     downloadManually: 'Descargar manualmente'
+  },
+  patchMap: {
+    title: 'Lista de Entradas',
+    showOnCanvas: 'Mostrar en escenario',
+    autoNumber: 'Numerar automático',
+    exportPdf: 'Exportar PDF',
+    save: 'Guardar',
+    cancel: 'Cancelar',
+    colChannel: '#',
+    colItem: 'Elemento',
+    colInputLabel: 'Etiqueta',
+    colNotes: 'Notas',
+    notesPlaceholder: 'Modelo de micrófono, notas…',
+    empty: 'No hay elementos conectables en el escenario',
+    duplicateWarning: 'Números de canal duplicados — las filas resaltadas comparten el mismo canal.'
   }
 } as const
 

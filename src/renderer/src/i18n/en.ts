@@ -15,10 +15,12 @@ const en = {
     zoomIn: 'Zoom In',
     zoomOut: 'Zoom Out',
     resetZoom: 'Reset Zoom',
+    background: 'Background',
     importBg: 'Import Background Image',
     lockBg: 'Lock Background',
     unlockBg: 'Unlock Background',
-    removeBg: 'Remove Background'
+    removeBg: 'Remove Background',
+    inputList: 'Input List'
   },
   projects: {
     title: 'Projects',
@@ -134,7 +136,8 @@ const en = {
     sendToBack: 'Send to Back',
     lockLayer: 'Lock Layer',
     unlockLayer: 'Unlock Layer',
-    deleteSelected: 'Delete Selected ({{count}})'
+    deleteSelected: 'Delete Selected ({{count}})',
+    editPatchInfo: 'Edit Patch Info'
   },
   fileOps: {
     importSuccess: 'Project "{{name}}" imported successfully',
@@ -146,6 +149,21 @@ const en = {
     restart: 'Restart now',
     installError: 'Could not install update automatically.',
     downloadManually: 'Download manually'
+  },
+  patchMap: {
+    title: 'Input List',
+    showOnCanvas: 'Show on canvas',
+    autoNumber: 'Auto-number',
+    exportPdf: 'Export PDF',
+    save: 'Save',
+    cancel: 'Cancel',
+    colChannel: '#',
+    colItem: 'Item',
+    colInputLabel: 'Input Label',
+    colNotes: 'Notes',
+    notesPlaceholder: 'Mic model, notes…',
+    empty: 'No inputs on stage',
+    duplicateWarning: 'Duplicate channel numbers — highlighted rows share the same channel.'
   }
 } as const
 

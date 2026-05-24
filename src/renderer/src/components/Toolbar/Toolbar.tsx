@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next'
 import { useProjectStore } from '../../store/useProjectStore'
 import { usePrefsStore } from '../../store/usePrefsStore'
 import type { StagePlotExportData } from '../../../../shared/types'
+import { PatchMapModal } from '../PatchMap/PatchMapModal'
+import { exportInputListPdf } from '../../utils/exportInputListPdf'
 
 const isMac = window.api.platform === 'darwin'
 
@@ -12,7 +14,7 @@ function clamp(v: number, min: number, max: number): number {
 
 export function Toolbar(): JSX.Element {
   const { t } = useTranslation()
-  const { language, setLanguage } = usePrefsStore()
+  const { language, setLanguage, showPatchNumbers, setShowPatchNumbers } = usePrefsStore()
   const {
     projects,
     activeProject,
@@ -38,12 +40,16 @@ export function Toolbar(): JSX.Element {
 
   const [showProjects, setShowProjects] = useState(false)
   const [showExport, setShowExport] = useState(false)
+  const [showBackground, setShowBackground] = useState(false)
+  const [showPatchMap, setShowPatchMap] = useState(false)
+  const [patchFocusId, setPatchFocusId] = useState<string | null>(null)
   const [newName, setNewName] = useState('')
   const [dbError, setDbError] = useState<string | null>(null)
   const [importError, setImportError] = useState<string | null>(null)
   const [importSuccess, setImportSuccess] = useState<string | null>(null)
   const [appVersion, setAppVersion] = useState('')
   const exportMenuRef = useRef<HTMLDivElement>(null)
+  const backgroundMenuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     window.api.app.getVersion().then(setAppVersion)
@@ -59,6 +65,27 @@ export function Toolbar(): JSX.Element {
     window.addEventListener('mousedown', dismiss)
     return () => window.removeEventListener('mousedown', dismiss)
   }, [showExport])
+
+  useEffect(() => {
+    if (!showBackground) return
+    function dismiss(e: MouseEvent): void {
+      if (backgroundMenuRef.current && !backgroundMenuRef.current.contains(e.target as Node)) {
+        setShowBackground(false)
+      }
+    }
+    window.addEventListener('mousedown', dismiss)
+    return () => window.removeEventListener('mousedown', dismiss)
+  }, [showBackground])
+
+  useEffect(() => {
+    function onOpenPatchMap(e: Event): void {
+      const { itemId } = (e as CustomEvent<{ itemId?: string }>).detail
+      setPatchFocusId(itemId ?? null)
+      setShowPatchMap(true)
+    }
+    window.addEventListener('open-patch-map', onOpenPatchMap)
+    return () => window.removeEventListener('open-patch-map', onOpenPatchMap)
+  }, [])
 
   async function handleOpen(): Promise<void> {
     try {
@@ -86,7 +113,7 @@ export function Toolbar(): JSX.Element {
   }
 
   async function handleImportBackground(): Promise<void> {
-    setShowExport(false)
+    setShowBackground(false)
     const dataUrl = await window.api.files.importImage()
     if (dataUrl) await setBackgroundImage(dataUrl)
   }
@@ -208,7 +235,7 @@ export function Toolbar(): JSX.Element {
               {/* Export / Import */}
               <div ref={exportMenuRef} className="relative">
                 <button
-                  onClick={() => setShowExport((v) => !v)}
+                  onClick={() => { setShowExport((v) => !v); setShowBackground(false) }}
                   className="text-xs px-3 py-1.5 rounded bg-surface-2 hover:bg-border
                              transition-colors cursor-pointer flex items-center gap-1"
                 >
@@ -225,41 +252,6 @@ export function Toolbar(): JSX.Element {
                       📂 {t('toolbar.importJson')}
                     </button>
                     <div className="h-px bg-border mx-2 my-1" />
-                    <button
-                      className="w-full text-left px-4 py-2 text-xs hover:bg-surface-2
-                                 transition-colors flex items-center gap-2 disabled:opacity-40"
-                      onClick={handleImportBackground}
-                      disabled={backgroundLocked}
-                    >
-                      🖼 {t('toolbar.importBg')}
-                    </button>
-                    {backgroundImage && (
-                      <>
-                        <button
-                          className="w-full text-left px-4 py-2 text-xs hover:bg-surface-2
-                                     transition-colors flex items-center gap-2"
-                          onClick={() => {
-                            void setBackgroundLocked(!backgroundLocked)
-                            setShowExport(false)
-                          }}
-                        >
-                          {backgroundLocked ? '🔓' : '🔒'}{' '}
-                          {t(backgroundLocked ? 'toolbar.unlockBg' : 'toolbar.lockBg')}
-                        </button>
-                        <button
-                          className="w-full text-left px-4 py-2 text-xs hover:bg-surface-2
-                                     transition-colors flex items-center gap-2 disabled:opacity-40"
-                          onClick={() => {
-                            void setBackgroundImage(null)
-                            setShowExport(false)
-                          }}
-                          disabled={backgroundLocked}
-                        >
-                          ✕ {t('toolbar.removeBg')}
-                        </button>
-                      </>
-                    )}
-                  <div className="h-px bg-border mx-2 my-1" />
                     <button
                       className="w-full text-left px-4 py-2 text-xs hover:bg-surface-2
                                  transition-colors flex items-center gap-2"
@@ -290,6 +282,69 @@ export function Toolbar(): JSX.Element {
                   </div>
                 )}
               </div>
+
+              {/* Background */}
+              <div ref={backgroundMenuRef} className="relative">
+                <button
+                  onClick={() => { setShowBackground((v) => !v); setShowExport(false) }}
+                  className={`text-xs px-3 py-1.5 rounded transition-colors cursor-pointer flex items-center gap-1
+                    ${backgroundImage ? 'bg-surface-2 hover:bg-border ring-1 ring-inset ring-white/20' : 'bg-surface-2 hover:bg-border'}`}
+                >
+                  {t('toolbar.background')}
+                  {backgroundImage && <span className="w-1.5 h-1.5 rounded-full bg-blue-400 ml-0.5" />}
+                  <span className="opacity-50 text-[10px]">▾</span>
+                </button>
+                {showBackground && (
+                  <div className="absolute top-full left-0 mt-1 bg-surface border border-border
+                                  rounded-lg shadow-2xl py-1 min-w-48 z-50 overflow-hidden">
+                    <button
+                      className="w-full text-left px-4 py-2 text-xs hover:bg-surface-2
+                                 transition-colors flex items-center gap-2 disabled:opacity-40"
+                      onClick={handleImportBackground}
+                      disabled={backgroundLocked}
+                    >
+                      🖼 {t('toolbar.importBg')}
+                    </button>
+                    {backgroundImage && (
+                      <>
+                        <button
+                          className="w-full text-left px-4 py-2 text-xs hover:bg-surface-2
+                                     transition-colors flex items-center gap-2"
+                          onClick={() => {
+                            void setBackgroundLocked(!backgroundLocked)
+                            setShowBackground(false)
+                          }}
+                        >
+                          {backgroundLocked ? '🔓' : '🔒'}{' '}
+                          {t(backgroundLocked ? 'toolbar.unlockBg' : 'toolbar.lockBg')}
+                        </button>
+                        <button
+                          className="w-full text-left px-4 py-2 text-xs hover:bg-surface-2
+                                     transition-colors flex items-center gap-2 disabled:opacity-40"
+                          onClick={() => {
+                            void setBackgroundImage(null)
+                            setShowBackground(false)
+                          }}
+                          disabled={backgroundLocked}
+                        >
+                          ✕ {t('toolbar.removeBg')}
+                        </button>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="w-px h-5 bg-border mx-1" />
+
+              {/* Input List / Patch Map */}
+              <button
+                onClick={() => { setPatchFocusId(null); setShowPatchMap(true) }}
+                className="text-xs px-3 py-1.5 rounded bg-surface-2 hover:bg-border
+                           transition-colors cursor-pointer"
+              >
+                {t('toolbar.inputList')}
+              </button>
 
               <span className="text-sm font-medium text-white/60 ml-2 truncate max-w-48">
                 {activeProject.name}
@@ -332,6 +387,19 @@ export function Toolbar(): JSX.Element {
                         flex items-center gap-2">
           <span>✓</span> {importSuccess}
         </div>
+      )}
+
+      {/* Patch Map / Input List modal */}
+      {showPatchMap && activeProject && (
+        <PatchMapModal
+          items={items}
+          projectName={activeProject.name}
+          showPatchNumbers={showPatchNumbers}
+          focusItemId={patchFocusId}
+          onToggleShowPatchNumbers={() => setShowPatchNumbers(!showPatchNumbers)}
+          onExportPdf={() => exportInputListPdf(items, activeProject.name)}
+          onClose={() => { setShowPatchMap(false); setPatchFocusId(null) }}
+        />
       )}
 
       {/* Projects modal */}
