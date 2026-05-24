@@ -136,8 +136,7 @@ const es = {
     sendToBack: 'Enviar al Fondo',
     lockLayer: 'Bloquear Capa',
     unlockLayer: 'Desbloquear Capa',
-    deleteSelected: 'Eliminar Seleccionados ({{count}})',
-    editPatchInfo: 'Editar Info de Canal'
+    deleteSelected: 'Eliminar Seleccionados ({{count}})'
   },
   fileOps: {
     importSuccess: 'Proyecto "{{name}}" importado exitosamente',
@@ -152,18 +151,9 @@ const es = {
   },
   patchMap: {
     title: 'Lista de Entradas',
-    showOnCanvas: 'Mostrar en escenario',
-    autoNumber: 'Numerar automático',
-    exportPdf: 'Exportar PDF',
-    save: 'Guardar',
-    cancel: 'Cancelar',
-    colChannel: '#',
-    colItem: 'Elemento',
-    colInputLabel: 'Etiqueta',
-    colNotes: 'Notas',
-    notesPlaceholder: 'Modelo de micrófono, notas…',
-    empty: 'No hay elementos conectables en el escenario',
-    duplicateWarning: 'Números de canal duplicados — las filas resaltadas comparten el mismo canal.'
+    addRow: 'Agregar entrada',
+    empty: 'Sin entradas — haz clic en + para agregar',
+    namePlaceholder: 'Nombre de entrada…'
   }
 } as const
 

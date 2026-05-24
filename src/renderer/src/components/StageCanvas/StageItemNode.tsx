@@ -5,7 +5,6 @@ import type { StageItem, StageItemType } from '../../../../shared/types'
 import { ICON_BODIES, ICON_PRESET_ROTATION } from '../../assets/icons/iconPaths'
 import type { IconData } from '../../assets/icons/iconPaths'
 import { isLayerLocked, getCustomExtra } from '../../../../shared/itemExtras'
-import type { BaseExtra } from '../../../../shared/types'
 
 export const LABEL_HEIGHT = 22
 
@@ -87,7 +86,6 @@ const LOCK_PATH = 'M5 11V7a4 4 0 0 1 8 0v4M3 11h12v8H3zM9 15v2'
 interface StageItemNodeProps {
   item: StageItem
   isSelected: boolean
-  showPatchBadge?: boolean
   nodeRef: (node: Konva.Group | null) => void
   onSelect: (e: Konva.KonvaEventObject<MouseEvent>) => void
   onDragStart: (e: Konva.KonvaEventObject<MouseEvent>) => void
@@ -100,7 +98,6 @@ interface StageItemNodeProps {
 export function StageItemNode({
   item,
   isSelected,
-  showPatchBadge = false,
   nodeRef,
   onSelect,
   onDragStart,
@@ -152,9 +149,6 @@ export function StageItemNode({
   // Lock badge dimensions
   const badgeSize = Math.max(12, Math.min(width, height) * 0.28)
   const badgeScale = badgeSize / 16
-
-  // Patch number badge (top-left)
-  const patchNum = showPatchBadge ? (item.extra as BaseExtra | null)?.patchNumber : undefined
 
   function handleContextMenu(e: Konva.KonvaEventObject<PointerEvent>): void {
     e.evt.preventDefault()
@@ -332,30 +326,6 @@ export function StageItemNode({
         </Group>
       )}
 
-      {/* Patch number badge — shown in top-left corner when showPatchBadge is true */}
-      {patchNum !== undefined && (
-        <Group x={2} y={2} listening={false}>
-          <Rect
-            width={badgeSize}
-            height={badgeSize}
-            fill="rgba(0,0,0,0.65)"
-            cornerRadius={3}
-          />
-          <Text
-            x={0}
-            y={0}
-            width={badgeSize}
-            height={badgeSize}
-            text={String(patchNum)}
-            fontSize={Math.max(7, badgeSize * 0.55)}
-            fontStyle="bold"
-            fill="rgba(255,220,80,0.95)"
-            align="center"
-            verticalAlign="middle"
-            listening={false}
-          />
-        </Group>
-      )}
     </Group>
   )
 }

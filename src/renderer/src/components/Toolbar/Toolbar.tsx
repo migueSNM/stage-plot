@@ -3,8 +3,6 @@ import { useTranslation } from 'react-i18next'
 import { useProjectStore } from '../../store/useProjectStore'
 import { usePrefsStore } from '../../store/usePrefsStore'
 import type { StagePlotExportData } from '../../../../shared/types'
-import { PatchMapModal } from '../PatchMap/PatchMapModal'
-import { exportInputListPdf } from '../../utils/exportInputListPdf'
 
 const isMac = window.api.platform === 'darwin'
 
@@ -14,7 +12,7 @@ function clamp(v: number, min: number, max: number): number {
 
 export function Toolbar(): JSX.Element {
   const { t } = useTranslation()
-  const { language, setLanguage, showPatchNumbers, setShowPatchNumbers } = usePrefsStore()
+  const { language, setLanguage, showPatchPanel, setShowPatchPanel } = usePrefsStore()
   const {
     projects,
     activeProject,
@@ -41,8 +39,6 @@ export function Toolbar(): JSX.Element {
   const [showProjects, setShowProjects] = useState(false)
   const [showExport, setShowExport] = useState(false)
   const [showBackground, setShowBackground] = useState(false)
-  const [showPatchMap, setShowPatchMap] = useState(false)
-  const [patchFocusId, setPatchFocusId] = useState<string | null>(null)
   const [newName, setNewName] = useState('')
   const [dbError, setDbError] = useState<string | null>(null)
   const [importError, setImportError] = useState<string | null>(null)
@@ -76,16 +72,6 @@ export function Toolbar(): JSX.Element {
     window.addEventListener('mousedown', dismiss)
     return () => window.removeEventListener('mousedown', dismiss)
   }, [showBackground])
-
-  useEffect(() => {
-    function onOpenPatchMap(e: Event): void {
-      const { itemId } = (e as CustomEvent<{ itemId?: string }>).detail
-      setPatchFocusId(itemId ?? null)
-      setShowPatchMap(true)
-    }
-    window.addEventListener('open-patch-map', onOpenPatchMap)
-    return () => window.removeEventListener('open-patch-map', onOpenPatchMap)
-  }, [])
 
   async function handleOpen(): Promise<void> {
     try {
@@ -337,11 +323,11 @@ export function Toolbar(): JSX.Element {
 
               <div className="w-px h-5 bg-border mx-1" />
 
-              {/* Input List / Patch Map */}
+              {/* Input List panel toggle */}
               <button
-                onClick={() => { setPatchFocusId(null); setShowPatchMap(true) }}
-                className="text-xs px-3 py-1.5 rounded bg-surface-2 hover:bg-border
-                           transition-colors cursor-pointer"
+                onClick={() => setShowPatchPanel(!showPatchPanel)}
+                className={`text-xs px-3 py-1.5 rounded transition-colors cursor-pointer
+                  ${showPatchPanel ? 'bg-accent/20 text-accent hover:bg-accent/30' : 'bg-surface-2 hover:bg-border'}`}
               >
                 {t('toolbar.inputList')}
               </button>
@@ -387,19 +373,6 @@ export function Toolbar(): JSX.Element {
                         flex items-center gap-2">
           <span>✓</span> {importSuccess}
         </div>
-      )}
-
-      {/* Patch Map / Input List modal */}
-      {showPatchMap && activeProject && (
-        <PatchMapModal
-          items={items}
-          projectName={activeProject.name}
-          showPatchNumbers={showPatchNumbers}
-          focusItemId={patchFocusId}
-          onToggleShowPatchNumbers={() => setShowPatchNumbers(!showPatchNumbers)}
-          onExportPdf={() => exportInputListPdf(items, activeProject.name)}
-          onClose={() => { setShowPatchMap(false); setPatchFocusId(null) }}
-        />
       )}
 
       {/* Projects modal */}

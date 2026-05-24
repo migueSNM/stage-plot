@@ -12,9 +12,9 @@ export interface CustomItemDef {
 interface PrefsStore {
   language: 'en' | 'es'
   customItems: CustomItemDef[]
-  showPatchNumbers: boolean
+  showPatchPanel: boolean
   setLanguage: (lang: 'en' | 'es') => void
-  setShowPatchNumbers: (v: boolean) => void
+  setShowPatchPanel: (v: boolean) => void
   addCustomItem: (def: Omit<CustomItemDef, 'id'>) => void
   updateCustomItem: (id: string, updates: Partial<Omit<CustomItemDef, 'id'>>) => void
   deleteCustomItem: (id: string) => void
@@ -28,14 +28,14 @@ export const usePrefsStore = create(
     (set) => ({
       language: 'en',
       customItems: [],
-      showPatchNumbers: false,
+      showPatchPanel: false,
 
       setLanguage: (language) => {
         i18n.changeLanguage(language)
         set({ language })
       },
 
-      setShowPatchNumbers: (showPatchNumbers) => set({ showPatchNumbers }),
+      setShowPatchPanel: (showPatchPanel) => set({ showPatchPanel }),
 
       addCustomItem: (def) => {
         const id = `custom-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`

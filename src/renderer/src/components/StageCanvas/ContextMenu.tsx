@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import type { StageItem } from '../../../../shared/types'
-import { isCableType, isLayerLocked, isPatchableType } from '../../../../shared/itemExtras'
+import { isCableType, isLayerLocked } from '../../../../shared/itemExtras'
 
 export interface ContextMenuData {
   x: number
@@ -19,7 +19,6 @@ interface ContextMenuProps {
   onSendToBack: (id: string) => void
   onToggleLock: (id: string) => void
   onDelete: (ids: string[]) => void
-  onEditPatchInfo?: (id: string) => void
   onClose: () => void
 }
 
@@ -34,7 +33,6 @@ export function ContextMenu({
   onSendToBack,
   onToggleLock,
   onDelete,
-  onEditPatchInfo,
   onClose
 }: ContextMenuProps): JSX.Element {
   const { t } = useTranslation()
@@ -98,17 +96,6 @@ export function ContextMenu({
               ? `🔓 ${t('contextMenu.unlockLayer')}`
               : `🔒 ${t('contextMenu.lockLayer')}`}
           </button>
-          {isPatchableType(contextMenuItem.type) && onEditPatchInfo && (
-            <>
-              <div className="h-px bg-border mx-2 my-1" />
-              <button
-                className="w-full text-left px-4 py-2 text-sm hover:bg-surface-2 transition-colors flex items-center gap-2"
-                onClick={() => { onEditPatchInfo(contextMenu.itemId); onClose() }}
-              >
-                🎛 {t('contextMenu.editPatchInfo')}
-              </button>
-            </>
-          )}
           <div className="h-px bg-border mx-2 my-1" />
         </>
       )}

@@ -39,36 +39,3 @@ export function isLayerLocked(item: StageItem): boolean {
 export function setLayerLocked(item: StageItem, locked: boolean): ItemExtra {
   return { ...(item.extra ?? {}), layerLocked: locked } as ItemExtra
 }
-
-export const PATCH_EXCLUDED_TYPES = new Set([
-  'cable_xlr',
-  'cable_trs',
-  'cable_ts',
-  'cable_midi',
-  'cable_speakon',
-  'rectangle',
-  'circle',
-  'text',
-  'platform',
-  'desk_foh'
-])
-
-export function isPatchableType(type: string): boolean {
-  return !PATCH_EXCLUDED_TYPES.has(type)
-}
-
-export function getPatchExtra(item: StageItem) {
-  const b = item.extra as BaseExtra | null
-  return {
-    patchNumber: b?.patchNumber,
-    inputLabel: b?.inputLabel,
-    patchNotes: b?.patchNotes
-  }
-}
-
-export function setPatchExtra(
-  item: StageItem,
-  patch: { patchNumber?: number; inputLabel?: string; patchNotes?: string }
-): ItemExtra {
-  return { ...(item.extra ?? {}), ...patch } as ItemExtra
-}

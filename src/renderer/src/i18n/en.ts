@@ -136,8 +136,7 @@ const en = {
     sendToBack: 'Send to Back',
     lockLayer: 'Lock Layer',
     unlockLayer: 'Unlock Layer',
-    deleteSelected: 'Delete Selected ({{count}})',
-    editPatchInfo: 'Edit Patch Info'
+    deleteSelected: 'Delete Selected ({{count}})'
   },
   fileOps: {
     importSuccess: 'Project "{{name}}" imported successfully',
@@ -152,18 +151,9 @@ const en = {
   },
   patchMap: {
     title: 'Input List',
-    showOnCanvas: 'Show on canvas',
-    autoNumber: 'Auto-number',
-    exportPdf: 'Export PDF',
-    save: 'Save',
-    cancel: 'Cancel',
-    colChannel: '#',
-    colItem: 'Item',
-    colInputLabel: 'Input Label',
-    colNotes: 'Notes',
-    notesPlaceholder: 'Mic model, notes…',
-    empty: 'No inputs on stage',
-    duplicateWarning: 'Duplicate channel numbers — highlighted rows share the same channel.'
+    addRow: 'Add input',
+    empty: 'No inputs yet — click + to add',
+    namePlaceholder: 'Input name…'
   }
 } as const
 

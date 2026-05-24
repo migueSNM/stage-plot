@@ -15,8 +15,7 @@ import { useExportHandlers } from '../../hooks/useExportHandlers'
 import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts'
 import { useCableHandlers } from '../../hooks/useCableHandlers'
 import type { StageItem, PortSide } from '../../../../shared/types'
-import { isCableType, getCableExtra, isLayerLocked, getTextExtra, isPatchableType } from '../../../../shared/itemExtras'
-import { usePrefsStore } from '../../store/usePrefsStore'
+import { isCableType, getCableExtra, isLayerLocked, getTextExtra } from '../../../../shared/itemExtras'
 
 interface MarqueeRect {
   x: number
@@ -43,6 +42,7 @@ export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
   const {
     items,
     activeProject,
+    patchRows,
     updateItemPosition,
     updateItem,
     nudgeItem,
@@ -63,8 +63,6 @@ export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
     backgroundWidth,
     backgroundHeight
   } = useProjectStore()
-
-  const { showPatchNumbers } = usePrefsStore()
 
   // Items sorted by sort_order so higher values render on top in Konva
   const sortedItems = [...items].sort((a, b) => a.sort_order - b.sort_order)
@@ -146,7 +144,7 @@ export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
 
   // ── Hooks ─────────────────────────────────────────────────────────────────
 
-  useExportHandlers({ stageRef, activeProject, registerExport })
+  useExportHandlers({ stageRef, activeProject, patchRows, registerExport })
 
   useKeyboardShortcuts({
     editingIdRef,
@@ -684,7 +682,6 @@ export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
                   key={item.id}
                   item={item}
                   isSelected={selectedIds.includes(item.id)}
-                  showPatchBadge={showPatchNumbers && isPatchableType(item.type)}
                   nodeRef={(node) => {
                     if (node) nodeRefs.current.set(item.id, node)
                     else nodeRefs.current.delete(item.id)
@@ -797,10 +794,6 @@ export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
           onSendToBack={(id) => void sendToBack(id)}
           onToggleLock={(id) => void toggleLayerLock(id)}
           onDelete={(ids) => { deleteItems(ids); setSelectedIds([]) }}
-          onEditPatchInfo={(id) => {
-            setContextMenu(null)
-            window.dispatchEvent(new CustomEvent('open-patch-map', { detail: { itemId: id } }))
-          }}
           onClose={() => setContextMenu(null)}
         />
       )}

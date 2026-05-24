@@ -3,13 +3,16 @@ import { useTranslation } from 'react-i18next'
 import { Toolbar } from './components/Toolbar/Toolbar'
 import { ItemPalette } from './components/ItemPalette/ItemPalette'
 import { StageCanvas } from './components/StageCanvas/StageCanvas'
+import { PatchMapPanel } from './components/PatchMap/PatchMapPanel'
 import { useProjectStore } from './store/useProjectStore'
+import { usePrefsStore } from './store/usePrefsStore'
 
 type UpdateStatus = 'downloading' | 'ready' | 'error' | null
 
 export default function App(): JSX.Element {
   const { t } = useTranslation()
   const { activeProject, undo, redo } = useProjectStore()
+  const { showPatchPanel } = usePrefsStore()
   const containerRef = useRef<HTMLDivElement>(null)
   const [canvasSize, setCanvasSize] = useState({ width: 800, height: 600 })
   const [updateVersion, setUpdateVersion] = useState<string | null>(null)
@@ -111,6 +114,7 @@ export default function App(): JSX.Element {
             </div>
           )}
         </main>
+        {showPatchPanel && activeProject && <PatchMapPanel />}
       </div>
     </div>
   )

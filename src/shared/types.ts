@@ -1,9 +1,15 @@
 // ─── Project ─────────────────────────────────────────────────────────────────
 
+export interface PatchMapRow {
+  id: string
+  name: string
+}
+
 export interface Project {
   id: string
   name: string
   description: string | null
+  patch_map?: PatchMapRow[] | null
   created_at: string
   updated_at: string
 }
@@ -103,9 +109,6 @@ export interface CustomExtra {
 
 export interface BaseExtra {
   layerLocked?: boolean
-  patchNumber?: number
-  inputLabel?: string
-  patchNotes?: string
 }
 
 export type ItemExtra =
