@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { Group, Line, Circle, Text } from 'react-konva'
 import type Konva from 'konva'
-import type { StageItem } from '../../../../shared/types'
+import type { StageItem, PortSide } from '../../../../shared/types'
+import { getCableExtra } from '../../../../shared/itemExtras'
 
 export const CABLE_DEFAULT_COLOR = '#4a6fa5'
 
@@ -21,8 +22,6 @@ const CABLE_LABELS: Record<string, string> = {
   cable_midi: 'MIDI',
   cable_speakon: 'Speakon'
 }
-
-export type PortSide = 'top' | 'right' | 'bottom' | 'left'
 
 /** Unit vector pointing away from an item face (the direction a cable exits). */
 function exitVector(side: PortSide): { dx: number; dy: number } {
@@ -217,12 +216,9 @@ export function CableNode({
 }: CableNodeProps): JSX.Element {
   const color = item.color ?? CABLE_COLORS[item.type] ?? CABLE_DEFAULT_COLOR
 
-  const ex = (item.extra ?? {}) as {
-    fromSide?: PortSide | null
-    toSide?: PortSide | null
-  }
-  const fromSide = ex.fromSide ?? null
-  const toSide   = ex.toSide   ?? null
+  const ex = getCableExtra(item)
+  const fromSide = ex?.fromSide ?? null
+  const toSide   = ex?.toSide   ?? null
 
   const [isHovered, setIsHovered] = useState(false)
 

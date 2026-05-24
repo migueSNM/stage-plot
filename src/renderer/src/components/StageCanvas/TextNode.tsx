@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Group, Rect, Text } from 'react-konva'
 import type Konva from 'konva'
 import type { StageItem } from '../../../../shared/types'
+import { getTextExtra } from '../../../../shared/itemExtras'
 
 interface TextNodeProps {
   item: StageItem
@@ -29,9 +30,9 @@ export function TextNode({
   onDblClick
 }: TextNodeProps): JSX.Element {
   const [isHovered, setIsHovered] = useState(false)
-  const extra = (item.extra as { fontSize?: number; fontStyle?: string } | null) ?? {}
-  const fontSize = extra.fontSize ?? 16
-  const fontStyle = extra.fontStyle ?? 'normal'
+  const extra = getTextExtra(item)
+  const fontSize = extra.fontSize
+  const fontStyle = extra.fontStyle
   const textColor = item.color ?? labelColor
 
   function handleContextMenu(e: Konva.KonvaEventObject<PointerEvent>): void {

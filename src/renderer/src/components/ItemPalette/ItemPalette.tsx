@@ -4,6 +4,7 @@ import { useProjectStore } from '../../store/useProjectStore'
 import { usePrefsStore, type CustomItemDef } from '../../store/usePrefsStore'
 import { ICON_BODIES } from '../../assets/icons/iconPaths'
 import type { StageItem, StageItemType } from '../../../../shared/types'
+import { isCableType } from '../../../../shared/itemExtras'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -422,12 +423,7 @@ export function ItemPalette(): JSX.Element {
   ): void {
     if (!activeProject) return
     const size = getSize(type)
-    const isCable =
-      type === 'cable_xlr' ||
-      type === 'cable_trs' ||
-      type === 'cable_ts' ||
-      type === 'cable_midi' ||
-      type === 'cable_speakon'
+    const isCable = isCableType(type)
 
     const itemExtra: StageItem['extra'] = extra !== undefined
       ? extra
