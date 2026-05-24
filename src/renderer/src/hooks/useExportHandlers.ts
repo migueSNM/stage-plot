@@ -94,10 +94,13 @@ function drawPatchColumn(
   colW: number,
   rows: PatchMapRow[]
 ): void {
+  const padX = 10
+  const padY = 14
+  const numW = 26  // width reserved for the row number
+  const available = h - padY * 2
+
   // Adaptive row height — shrink to fit all rows, cap at 20px each
-  const rowH = Math.max(11, Math.min(20, Math.floor(h / rows.length)))
-  const numW = 24  // width reserved for the row number
-  const padX = 6
+  const rowH = Math.max(11, Math.min(20, Math.floor(available / rows.length)))
   const fontSize = Math.max(6, rowH * 0.52)
 
   // Column background
@@ -108,9 +111,9 @@ function drawPatchColumn(
   doc.setDrawColor(200, 200, 210)
   doc.line(x, 0, x, h)
 
-  let y = 0
+  let y = padY
   rows.forEach((row, idx) => {
-    if (y + rowH > h) return  // overflow — stop rendering
+    if (y + rowH > h - padY) return  // overflow — stop rendering
 
     // Subtle alternating background
     if (idx % 2 === 1) {
