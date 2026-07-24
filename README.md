@@ -12,6 +12,7 @@ Desktop app for musicians and sound engineers to create stage plots for live mus
 - [Project Structure](#project-structure)
 - [How to Make Changes](#how-to-make-changes)
 - [Building & Distributing](#building--distributing)
+- [Troubleshooting](#troubleshooting)
 - [Releases & Git Workflow](#releases--git-workflow)
 
 ---
@@ -250,6 +251,50 @@ npm run package:win
 
 1. Run `Stage Plot Setup x.x.x.exe`
 2. If Windows SmartScreen shows an "Unknown publisher" warning, click **More info → Run anyway**
+
+---
+
+## Troubleshooting
+
+### The demo link (GitHub Pages) is down
+
+The demo lives at **https://miguesnm.github.io/stage-plot/** (token-gated — see `src/renderer/src/DemoGate.tsx`) and is deployed by `.github/workflows/deploy-demo.yml`.
+
+**Gotcha:** `actions/deploy-pages` reports "success" even when GitHub Pages is disabled at the repo-settings level. A green workflow run does **not** guarantee the site is actually live.
+
+Check in order:
+
+```bash
+# 1. Is the site actually reachable?
+curl -sI https://miguesnm.github.io/stage-plot/
+# 404 → Pages is off or was never built. 200 with the wrong screen → token/expiry issue (step 4).
+
+# 2. Is Pages actually enabled on the repo? (independent of workflow status)
+gh api repos/migueSNM/stage-plot -q '.has_pages'
+# must print "true"
+
+# 3. Check recent deploy runs
+gh run list --repo migueSNM/stage-plot --workflow deploy-demo.yml --limit 5
+
+# 4. Check the token / expiry values the demo is gated on
+gh variable list --repo migueSNM/stage-plot
+```
+
+**If `has_pages` is `false`:** re-enable it and redeploy —
+
+```bash
+gh api -X POST repos/migueSNM/stage-plot/pages -f build_type=workflow
+gh workflow run deploy-demo.yml --repo migueSNM/stage-plot
+```
+
+### Rotating the demo link fails with a 403
+
+`.github/workflows/rotate-demo.yml` updates the `DEMO_TOKEN` / `DEMO_EXPIRES_AT` repo variables. The built-in `GITHUB_TOKEN` has **no scope for the repo-variables write API**, regardless of the workflow's `permissions:` block — so `gh variable set` fails with 403. The workflow uses a `DEMO_ROTATE_PAT` secret (a personal access token with "Variables: read and write" for this repo) instead. If rotation starts failing again, check that secret hasn't expired.
+
+```bash
+gh run list --repo migueSNM/stage-plot --workflow rotate-demo.yml --limit 5
+gh secret list --repo migueSNM/stage-plot   # confirm DEMO_ROTATE_PAT still exists
+```
 
 ---
 
