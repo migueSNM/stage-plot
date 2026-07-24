@@ -25,9 +25,15 @@ jobs:
   rotate:
     runs-on: ubuntu-latest
     steps:
+      # The built-in GITHUB_TOKEN has no permission scope for the repo-variables
+      # API (fails with 403 regardless of the `permissions:` block above), so
+      # these two steps need a PAT with variable-write access instead.
+      # Set one up once: Settings → Developer settings → PAT (classic, "repo"
+      # scope, or fine-grained with "Variables: read and write" for this repo)
+      # → save it as the DEMO_ROTATE_PAT repo secret.
       - name: Update DEMO_EXPIRES_AT variable
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.DEMO_ROTATE_PAT }}
         run: |
           gh variable set DEMO_EXPIRES_AT \
             --body "${{ inputs.expires_at }}" \
@@ -36,7 +42,7 @@ jobs:
       - name: Update DEMO_TOKEN variable (if provided)
         if: ${{ inputs.token != '' }}
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.DEMO_ROTATE_PAT }}
         run: |
           gh variable set DEMO_TOKEN \
             --body "${{ inputs.token }}" \
