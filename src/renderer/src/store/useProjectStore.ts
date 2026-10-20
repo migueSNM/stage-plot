@@ -300,6 +300,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       id: generateId(),
       name: data.project.name,
       description: data.project.description,
+      patch_map: data.project.patch_map ?? null,
       created_at: ts,
       updated_at: ts
     }
