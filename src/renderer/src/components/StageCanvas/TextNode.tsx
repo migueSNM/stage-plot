@@ -11,7 +11,7 @@ interface TextNodeProps {
   nodeRef: (node: Konva.Group | null) => void
   onSelect: (e: Konva.KonvaEventObject<MouseEvent>) => void
   onDragStart: (e: Konva.KonvaEventObject<MouseEvent>) => void
-  onDragMove: (e: Konva.KonvaEventObject<DragEvent>) => void
+  onDragMove?: (e: Konva.KonvaEventObject<DragEvent>) => void
   onDragEnd: (e: Konva.KonvaEventObject<DragEvent>) => void
   onContextMenu: (x: number, y: number) => void
   onDblClick: () => void

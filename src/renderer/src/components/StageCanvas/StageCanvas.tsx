@@ -105,6 +105,7 @@ export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
   // Tracks whether an arrow key is currently held so we only push one undo entry
   const arrowHeldRef = useRef(false)
   const marqueeWasDraggedRef = useRef(false)
+  const multiDragCommittedRef = useRef(false)
 
   // Pan state
   const spaceDownRef = useRef(false)
@@ -268,22 +269,8 @@ export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
   }
 
   // ── Drag handling (supports multi-select) ─────────────────────────────────
-
-  function handleDragMove(item: StageItem, e: Konva.KonvaEventObject<DragEvent>): void {
-    const ids = selectedIdsRef.current
-    if (ids.length <= 1 || !ids.includes(item.id)) return
-    const dx = e.target.x() - item.x
-    const dy = e.target.y() - item.y
-    for (const id of ids) {
-      if (id === item.id) continue
-      const node = nodeRefs.current.get(id)
-      const it = useProjectStore.getState().items.find((i) => i.id === id)
-      if (node && it) {
-        node.x(it.x + dx)
-        node.y(it.y + dy)
-      }
-    }
-  }
+  // With several nodes attached to the Transformer, Konva drags them all together
+  // and fires dragend on every one of them — commit the group move only once.
 
   function handleDragEnd(item: StageItem, e: Konva.KonvaEventObject<DragEvent>): void {
     const ids = selectedIdsRef.current
@@ -291,6 +278,8 @@ export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
     const newY = e.target.y()
 
     if (ids.length > 1 && ids.includes(item.id)) {
+      if (multiDragCommittedRef.current) return
+      multiDragCommittedRef.current = true
       const dx = newX - item.x
       const dy = newY - item.y
       const latest = useProjectStore.getState().items
@@ -663,11 +652,11 @@ export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
                       selectItem(item.id, e.evt.shiftKey)
                     }}
                     onDragStart={(_e) => {
+                      multiDragCommittedRef.current = false
                       if (!selectedIdsRef.current.includes(item.id)) {
                         selectItem(item.id, false)
                       }
                     }}
-                    onDragMove={(e) => handleDragMove(item, e)}
                     onDragEnd={(e) => handleDragEnd(item, e)}
                     onContextMenu={(x, y) => {
                       if (!selectedIds.includes(item.id)) setSelectedIds([item.id])
@@ -691,11 +680,11 @@ export function StageCanvas({ width, height }: StageCanvasProps): JSX.Element {
                     selectItem(item.id, e.evt.shiftKey)
                   }}
                   onDragStart={(_e) => {
+                    multiDragCommittedRef.current = false
                     if (!selectedIdsRef.current.includes(item.id)) {
                       selectItem(item.id, false)
                     }
                   }}
-                  onDragMove={(e) => handleDragMove(item, e)}
                   onDragEnd={(e) => handleDragEnd(item, e)}
                   onContextMenu={(x, y) => {
                     if (!selectedIds.includes(item.id)) setSelectedIds([item.id])
