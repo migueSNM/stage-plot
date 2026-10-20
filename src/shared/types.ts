@@ -1,9 +1,14 @@
 // ─── Project ─────────────────────────────────────────────────────────────────
 
+// Input number is not stored — it is the row's 1-based position in the list
 export interface PatchMapRow {
   id: string
-  name: string
+  instrument: string
+  element: string
+  notes: string
 }
+
+export type PatchMapField = 'instrument' | 'element' | 'notes'
 
 export interface Project {
   id: string

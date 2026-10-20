@@ -153,7 +153,13 @@ const es = {
     title: 'Lista de Entradas',
     addRow: 'Agregar entrada',
     empty: 'Sin entradas — haz clic en + para agregar',
-    namePlaceholder: 'Nombre de entrada…'
+    colNumber: 'Canal',
+    colInstrument: 'Instrumento',
+    colElement: 'Elemento / Mic',
+    colNotes: 'Notas',
+    instrumentPlaceholder: 'ej. Batería',
+    elementPlaceholder: 'ej. Bombo In',
+    notesPlaceholder: 'ej. Beta 91, gate'
   }
 } as const
 

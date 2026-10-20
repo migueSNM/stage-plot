@@ -1,5 +1,11 @@
 import { create } from 'zustand'
-import type { Project, StageItem, StagePlotExportData, PatchMapRow } from '../../../shared/types'
+import type {
+  Project,
+  StageItem,
+  StagePlotExportData,
+  PatchMapRow,
+  PatchMapField
+} from '../../../shared/types'
 import { getCableExtra, isLayerLocked, setLayerLocked } from '../../../shared/itemExtras'
 import { MAX_HISTORY, remapIds, applyNudgeDelta, clampHistory } from '../utils/itemUtils'
 
@@ -78,7 +84,7 @@ interface ProjectStore {
 
   // Patch map actions
   addPatchRow: () => Promise<void>
-  updatePatchRow: (id: string, name: string) => Promise<void>
+  updatePatchRow: (id: string, field: PatchMapField, value: string) => Promise<void>
   deletePatchRow: (id: string) => Promise<void>
   movePatchRow: (id: string, direction: 'up' | 'down') => Promise<void>
 }
@@ -239,7 +245,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     set({
       activeProject: project,
       items,
-      patchRows: project.patch_map ?? [],
+      patchRows: (project.patch_map ?? []).map(normalizePatchRow),
       undoStack: [],
       redoStack: [],
       backgroundImage: bg.imageData,
@@ -406,17 +412,17 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   addPatchRow: async () => {
     const { activeProject, patchRows } = get()
     if (!activeProject) return
-    const newRow: PatchMapRow = { id: generateId(), name: '' }
+    const newRow: PatchMapRow = { id: generateId(), instrument: '', element: '', notes: '' }
     const rows = [...patchRows, newRow]
     const updated = { ...activeProject, patch_map: rows, updated_at: now() }
     set({ patchRows: rows, activeProject: updated })
     await window.api.projects.save(updated)
   },
 
-  updatePatchRow: async (id, name) => {
+  updatePatchRow: async (id, field, value) => {
     const { activeProject, patchRows } = get()
     if (!activeProject) return
-    const rows = patchRows.map((r) => (r.id === id ? { ...r, name } : r))
+    const rows = patchRows.map((r) => (r.id === id ? { ...r, [field]: value } : r))
     const updated = { ...activeProject, patch_map: rows, updated_at: now() }
     set({ patchRows: rows, activeProject: updated })
     await window.api.projects.save(updated)
@@ -446,3 +452,13 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     await window.api.projects.save(updated)
   }
 }))
+
+// Rows saved before v0.12 only had a single `name` — it becomes the instrument
+function normalizePatchRow(row: Partial<PatchMapRow> & { id: string; name?: string }): PatchMapRow {
+  return {
+    id: row.id,
+    instrument: row.instrument ?? row.name ?? '',
+    element: row.element ?? '',
+    notes: row.notes ?? ''
+  }
+}

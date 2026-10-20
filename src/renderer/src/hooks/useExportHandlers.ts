@@ -3,6 +3,7 @@ import type React from 'react'
 import type Konva from 'konva'
 import { jsPDF } from 'jspdf'
 import type { Project, PatchMapRow } from '../../../shared/types'
+import i18n from '../i18n'
 
 interface ExportFns {
   png: (() => void) | null
@@ -63,20 +64,17 @@ export function useExportHandlers({
     stage.x(savedX)
     stage.y(savedY)
 
-    // When there are patch rows, widen the page to fit a sidebar column
-    const COL_W = patchRows.length > 0 ? 160 : 0
-    const pdfW = w + COL_W
-
     const pdf = new jsPDF({
-      orientation: pdfW > h ? 'landscape' : 'portrait',
+      orientation: w > h ? 'landscape' : 'portrait',
       unit: 'px',
-      format: [pdfW, h],
+      format: [w, h],
       hotfixes: ['px_scaling']
     })
     pdf.addImage(dataUrl, 'PNG', 0, 0, w, h)
 
+    // Input list goes on its own page(s) after the stage plot
     if (patchRows.length > 0) {
-      drawPatchColumn(pdf, w, h, COL_W, patchRows)
+      drawInputListPages(pdf, activeProject.name, patchRows)
     }
 
     pdf.save(`${activeProject.name}.pdf`)
@@ -87,63 +85,109 @@ export function useExportHandlers({
   }, [exportPng, exportPdf, registerExport])
 }
 
-function drawPatchColumn(
-  doc: jsPDF,
-  x: number,
-  h: number,
-  colW: number,
-  rows: PatchMapRow[]
-): void {
-  const padX = 10
-  const padY = 14
-  const numW = 26  // width reserved for the row number
-  const available = h - padY * 2
+// A4 portrait in px (jsPDF px_scaling: 1px = 0.75pt)
+const LIST_PAGE_W = 794
+const LIST_PAGE_H = 1123
 
-  // Adaptive row height — shrink to fit all rows, cap at 20px each
-  const rowH = Math.max(11, Math.min(20, Math.floor(available / rows.length)))
-  const fontSize = Math.max(6, rowH * 0.52)
+function drawInputListPages(doc: jsPDF, projectName: string, rows: PatchMapRow[]): void {
+  const margin = 48
+  const tableW = LIST_PAGE_W - margin * 2
+  const cellPadX = 8
+  const fontSize = 11
+  const lineH = 17
+  const headerH = 24
 
-  // Column background
-  doc.setFillColor(248, 248, 252)
-  doc.rect(x, 0, colW, h, 'F')
+  // Column layout: # | Instrument | Element | Notes
+  const numW = 60
+  const instrumentW = Math.round((tableW - numW) * 0.3)
+  const elementW = Math.round((tableW - numW) * 0.3)
+  const notesW = tableW - numW - instrumentW - elementW
+  const cols = [
+    { header: i18n.t('patchMap.colNumber'), w: numW },
+    { header: i18n.t('patchMap.colInstrument'), w: instrumentW },
+    { header: i18n.t('patchMap.colElement'), w: elementW },
+    { header: i18n.t('patchMap.colNotes'), w: notesW }
+  ]
 
-  // Left separator
-  doc.setDrawColor(200, 200, 210)
-  doc.line(x, 0, x, h)
+  let y = 0
 
-  let y = padY
+  function drawHeaderRow(): void {
+    doc.setFillColor(40, 40, 52)
+    doc.rect(margin, y, tableW, headerH, 'F')
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(10)
+    doc.setTextColor(255, 255, 255)
+    let x = margin
+    for (const col of cols) {
+      doc.text(col.header.toUpperCase(), x + cellPadX, y + headerH * 0.65)
+      x += col.w
+    }
+    y += headerH
+  }
+
+  function startPage(first: boolean): void {
+    doc.addPage([LIST_PAGE_W, LIST_PAGE_H], 'portrait')
+    y = margin
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(20, 20, 20)
+    doc.setFontSize(first ? 20 : 12)
+    doc.text(
+      first ? i18n.t('patchMap.title') : `${i18n.t('patchMap.title')} (cont.)`,
+      margin,
+      y + (first ? 16 : 10)
+    )
+    if (first) {
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(11)
+      doc.setTextColor(110, 110, 120)
+      doc.text(projectName, margin, y + 34)
+      y += 52
+    } else {
+      y += 24
+    }
+    drawHeaderRow()
+  }
+
+  startPage(true)
+
   rows.forEach((row, idx) => {
-    if (y + rowH > h - padY) return  // overflow — stop rendering
+    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(fontSize)
+    const cells = [
+      [String(idx + 1)],
+      doc.splitTextToSize(row.instrument, instrumentW - cellPadX * 2) as string[],
+      doc.splitTextToSize(row.element, elementW - cellPadX * 2) as string[],
+      doc.splitTextToSize(row.notes, notesW - cellPadX * 2) as string[]
+    ]
+    const lines = Math.max(1, ...cells.map((c) => c.length))
+    const rowH = lines * lineH + 10
+
+    if (y + rowH > LIST_PAGE_H - margin) startPage(false)
 
     // Subtle alternating background
     if (idx % 2 === 1) {
-      doc.setFillColor(240, 240, 246)
-      doc.rect(x, y, colW, rowH, 'F')
+      doc.setFillColor(244, 244, 248)
+      doc.rect(margin, y, tableW, rowH, 'F')
     }
-
-    // Row separator
     doc.setDrawColor(220, 220, 228)
-    doc.line(x, y + rowH, x + colW, y + rowH)
+    doc.line(margin, y + rowH, margin + tableW, y + rowH)
 
-    const baseline = y + rowH * 0.68
-
-    // Row number — muted, right-aligned in the number zone
-    doc.setFont('helvetica', 'bold')
-    doc.setFontSize(fontSize * 0.85)
-    doc.setTextColor(160, 160, 170)
-    doc.text(String(idx + 1), x + numW - padX, baseline, { align: 'right' })
-
-    // Thin separator between number and name
-    doc.setDrawColor(220, 220, 228)
-    doc.line(x + numW, y + 2, x + numW, y + rowH - 2)
-
-    // Name
-    doc.setFont('helvetica', 'normal')
-    doc.setFontSize(fontSize)
-    doc.setTextColor(30, 30, 30)
-    const nameW = colW - numW - padX * 2
-    const clipped = doc.splitTextToSize(row.name || '', nameW)
-    doc.text(clipped[0] ?? '', x + numW + padX, baseline)
+    let x = margin
+    cells.forEach((cellLines, colIdx) => {
+      if (colIdx === 0) {
+        doc.setFont('helvetica', 'bold')
+        doc.setTextColor(120, 120, 130)
+      } else {
+        doc.setFont('helvetica', 'normal')
+        doc.setTextColor(30, 30, 30)
+      }
+      doc.setFontSize(fontSize)
+      // Draw wrapped lines ourselves so row height matches the measured line count
+      cellLines.forEach((line, lineIdx) => {
+        doc.text(line, x + cellPadX, y + 5 + lineH * (lineIdx + 0.8))
+      })
+      x += cols[colIdx].w
+    })
 
     y += rowH
   })

@@ -153,7 +153,13 @@ const en = {
     title: 'Input List',
     addRow: 'Add input',
     empty: 'No inputs yet — click + to add',
-    namePlaceholder: 'Input name…'
+    colNumber: 'Input',
+    colInstrument: 'Instrument',
+    colElement: 'Element / Mic',
+    colNotes: 'Notes',
+    instrumentPlaceholder: 'e.g. Drums',
+    elementPlaceholder: 'e.g. Kick In',
+    notesPlaceholder: 'e.g. Beta 91, gate'
   }
 } as const
 
