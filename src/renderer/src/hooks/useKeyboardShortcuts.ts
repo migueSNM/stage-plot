@@ -44,6 +44,12 @@ export function useKeyboardShortcuts({
     const ARROW_KEYS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown']
 
     function onKeyDown(e: KeyboardEvent): void {
+      // Let text fields (palette search, rename inputs, …) handle their own keys
+      const target = e.target as HTMLElement
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+        return
+      }
+
       if (e.key === ' ' && !e.repeat && !editingIdRef.current) {
         e.preventDefault()
         spaceDownRef.current = true
